@@ -1,0 +1,319 @@
+<!-- templates/mathematics/problems.html - Mathematics problems listing -->
+{% extends "field_base.html" %}
+
+{% block title %}Math Problems - Learning Hub{% endblock %}
+
+{% block field_content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-brain me-2"></i>Mathematics Problems</h2>
+        <p class="text-muted">Practice and solve mathematical problems across different categories</p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('mathematics.create_problem_form') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add New Problem
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search Problems</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search_term or '' }}" 
+                       placeholder="Search by title, category, or content...">
+            </div>
+            <div class="col-md-3">
+                <label for="category" class="form-label">Category</label>
+                <select class="form-select" id="category" name="category">
+                    <option value="all" {{ 'selected' if current_category == 'all' else '' }}>All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category }}" {{ 'selected' if current_category == category else '' }}>
+                        {{ category.title() }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="difficulty" class="form-label">Difficulty</label>
+                <select class="form-select" id="difficulty" name="difficulty">
+                    <option value="all" {{ 'selected' if current_difficulty == 'all' else '' }}>All Levels</option>
+                    <option value="beginner" {{ 'selected' if current_difficulty == 'beginner' else '' }}>Beginner</option>
+                    <option value="intermediate" {{ 'selected' if current_difficulty == 'intermediate' else '' }}>Intermediate</option>
+                    <option value="advanced" {{ 'selected' if current_difficulty == 'advanced' else '' }}>Advanced</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="fas fa-search me-2"></i>Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Problems Grid -->
+{% if problems %}
+<div class="row g-4 mb-4">
+    {% for problem in problems %}
+    <div class="col-lg-6">
+        <div class="card problem-card h-100 shadow-sm border-0">
+            <div class="card-header d-flex justify-content-between align-items-start">
+                <div>
+                    <h5 class="card-title mb-1">{{ problem.title }}</h5>
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        {{ problem.created_at.strftime('%B %d, %Y') if problem.created_at else 'Recent' }}
+                    </small>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-primary me-1">{{ problem.category.title() }}</span>
+                    <span class="badge bg-{{ 'success' if problem.difficulty == 'beginner' else 'warning' if problem.difficulty == 'intermediate' else 'danger' }}">
+                        {{ problem.difficulty.title() }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <!-- Problem Preview -->
+                <div class="problem-preview mb-3">
+                    <h6 class="text-primary">Problem:</h6>
+                    <div class="math-content">
+                        {{ problem.problem_text[:200] }}{% if problem.problem_text|length > 200 %}...{% endif %}
+                    </div>
+                </div>
+                
+                <!-- Formula Used (if any) -->
+                {% if problem.formula_used %}
+                <div class="mb-3">
+                    <h6 class="text-info">Key Formula:</h6>
+                    <div class="formula-preview bg-light p-2 rounded">
+                        <code>{{ problem.formula_used[:100] }}{% if problem.formula_used|length > 100 %}...{% endif %}</code>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Problem Stats -->
+                <div class="problem-stats row text-center">
+                    <div class="col-4">
+                        <div class="stat-item">
+                            <span class="d-block h6 mb-1 text-primary">{{ problem.attempts or 0 }}</span>
+                            <small class="text-muted">Attempts</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-item">
+                            <span class="d-block h6 mb-1 text-success">{{ problem.correct_attempts or 0 }}</span>
+                            <small class="text-muted">Solved</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="stat-item">
+                            {% set success_rate = (problem.correct_attempts / problem.attempts * 100) if problem.attempts > 0 else 0 %}
+                            <span class="d-block h6 mb-1 text-warning">{{ "%.0f"|format(success_rate) }}%</span>
+                            <small class="text-muted">Success</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-transparent border-0">
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('mathematics.problem_detail', problem_id=problem.id) }}" 
+                       class="btn btn-primary btn-sm flex-fill">
+                        <i class="fas fa-play me-1"></i>Solve Problem
+                    </a>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="previewProblem(' {{ problem.id }} ')">
+                        <i class="fas fa-eye me-1"></i>Preview
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination (if needed) -->
+<div class="d-flex justify-content-center">
+    <nav aria-label="Problems pagination">
+        <ul class="pagination">
+            <li class="page-item disabled">
+                <span class="page-link">Showing {{ problems|length }} problems</span>
+            </li>
+        </ul>
+    </nav>
+</div>
+
+{% else %}
+<!-- No Problems Found -->
+<div class="text-center py-5">
+    <i class="fas fa-brain fa-4x text-muted mb-3"></i>
+    {% if search_term or current_category != 'all' or current_difficulty != 'all' %}
+    <h4>No problems found</h4>
+    <p class="text-muted">No problems match your search criteria.</p>
+    <a href="{{ url_for('mathematics.problems') }}" class="btn btn-outline-primary me-2">
+        <i class="fas fa-times me-1"></i>Clear Filters
+    </a>
+    {% else %}
+    <h4>No problems yet</h4>
+    <p class="text-muted">Be the first to add a mathematical problem!</p>
+    {% endif %}
+    <a href="{{ url_for('mathematics.create_problem_form') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Create First Problem
+    </a>
+</div>
+{% endif %}
+
+<!-- Problem Preview Modal -->
+<div class="modal fade" id="problemPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Problem Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="problemPreviewContent">
+                <!-- Problem content will be loaded here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="solveProblemBtn">
+                    <i class="fas fa-play me-1"></i>Solve Problem
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-submit search form with debounce
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search');
+    const categorySelect = document.getElementById('category');
+    const difficultySelect = document.getElementById('difficulty');
+    let searchTimeout;
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.form.submit();
+            }, 500);
+        });
+    }
+
+    if (categorySelect) {
+        categorySelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
+
+    if (difficultySelect) {
+        difficultySelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
+
+    // Render math content
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise().then(() => {
+            console.log('Math content rendered in problems list');
+        });
+    }
+});
+
+// Problem preview functionality
+function previewProblem(problemId) {
+    fetch(`/mathematics/api/problems/${problemId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showProblemPreview(data.problem);
+            } else {
+                alert('Failed to load problem preview');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to load problem preview');
+        });
+}
+
+// Replace the problematic section in templates/mathematics/problems.html
+function showProblemPreview(problem) {
+    const previewContent = document.getElementById('problemPreviewContent');
+    const solveProblemBtn = document.getElementById('solveProblemBtn');
+    
+    // Helper function to get difficulty badge class
+    function getDifficultyBadgeClass(difficulty) {
+        switch(difficulty) {
+            case 'beginner': return 'success';
+            case 'intermediate': return 'warning';
+            case 'advanced': return 'danger';
+            default: return 'secondary';
+        }
+    }
+    
+    previewContent.innerHTML = `
+        <div class="problem-preview">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h5 class="text-primary">${problem.title}</h5>
+                <div>
+                    <span class="badge bg-primary me-1">${problem.category}</span>
+                    <span class="badge bg-${getDifficultyBadgeClass(problem.difficulty)}">${problem.difficulty}</span>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <h6 class="fw-bold text-success">Problem:</h6>
+                <div class="problem-text">${problem.problem_text}</div>
+            </div>
+            
+            ${problem.formula_used ? `
+                <div class="mb-3">
+                    <h6 class="fw-bold text-info">Key Formula:</h6>
+                    <div class="formula-text bg-light p-2 rounded">${problem.formula_used}</div>
+                </div>
+            ` : ''}
+            
+            <div class="row text-center">
+                <div class="col-4">
+                    <span class="d-block h6 text-primary">${problem.attempts || 0}</span>
+                    <small class="text-muted">Total Attempts</small>
+                </div>
+                <div class="col-4">
+                    <span class="d-block h6 text-success">${problem.correct_attempts || 0}</span>
+                    <small class="text-muted">Correct Solutions</small>
+                </div>
+                <div class="col-4">
+                    <span class="d-block h6 text-warning">${problem.attempts > 0 ? Math.round(problem.correct_attempts / problem.attempts * 100) : 0}%</span>
+                    <small class="text-muted">Success Rate</small>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Update solve button
+    solveProblemBtn.onclick = function() {
+        window.location.href = `/mathematics/problems/${problem.id}`;
+    };
+    
+    // Show modal
+    const modal = new bootstrap.Modal(document.getElementById('problemPreviewModal'));
+    modal.show();
+    
+    // Re-render MathJax for the preview
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([previewContent]).then(() => {
+            console.log('Math content rendered in preview');
+        });
+    }
+}
+
+</script>
+{% endblock %}

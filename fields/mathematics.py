@@ -53,12 +53,43 @@ def problems():
     problems = query.order_by(MathProblem.created_at.desc()).all()
     categories = get_math_categories()
     
+    from app import FIELDS_CONFIG
+    field_info = FIELDS_CONFIG.get('mathematics', {})
+
     return render_template('mathematics/problems.html',
                          problems=problems,
                          categories=categories,
                          current_category=category,
                          current_difficulty=difficulty,
-                         search_term=search)
+                         search_term=search,
+                         field_key='mathematics',
+                         field_info=field_info)
+
+@math_bp.route('/api/problems/<int:problem_id>')
+def api_problem_detail(problem_id):
+    """API endpoint to get problem details"""
+    try:
+        problem = MathProblem.query.get_or_404(problem_id)
+        
+        return jsonify({
+            'success': True,
+            'problem': {
+                'id': problem.id,
+                'title': problem.title,
+                'problem_text': problem.problem_text,
+                'category': problem.category,
+                'difficulty': problem.difficulty,
+                'formula_used': problem.formula_used,
+                'attempts': problem.attempts,
+                'correct_attempts': problem.correct_attempts,
+                'created_at': problem.created_at.isoformat() if problem.created_at else None
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 404
+
+# fields/mathematics.py - Add the missing problem_detail route
 
 @math_bp.route('/problems/<int:problem_id>')
 def problem_detail(problem_id):
@@ -75,9 +106,16 @@ def problem_detail(problem_id):
         MathProblem.id != problem.id
     ).limit(3).all()
     
+    # Get field info
+    from app import FIELDS_CONFIG
+    field_info = FIELDS_CONFIG.get('mathematics', {})
+    
     return render_template('mathematics/problem_detail.html',
                          problem=problem,
-                         related_problems=related)
+                         related_problems=related,
+                         field_key='mathematics',
+                         field_info=field_info)
+
 
 @math_bp.route('/problems/create')
 def create_problem_form():
@@ -150,20 +188,40 @@ def formulas():
     """Mathematical formulas reference"""
     formulas_by_category = get_formulas_by_category()
     
+    from app import FIELDS_CONFIG
+    field_info = FIELDS_CONFIG.get('mathematics', {})
+
     return render_template('mathematics/formulas.html',
                          formulas=formulas_by_category,
-                         field_key='mathematics')
+                         field_key='mathematics',
+                         field_info=field_info)
 
 # Blog Routes
 @math_bp.route('/blog')
 def blog_posts():
-    """List all math blog posts"""
+    """List all math blog posts with search and filtering"""
     page = request.args.get('page', 1, type=int)
     per_page = 6
+    search = request.args.get('search', '')
+    tag = request.args.get('tag', '')
     
-    posts = BlogPost.query.filter_by(field='mathematics').order_by(
-        BlogPost.created_at.desc()
-    ).paginate(
+    # Build query
+    query = BlogPost.query.filter_by(field='mathematics')
+    
+    # Apply search filter
+    if search:
+        query = query.filter(
+            BlogPost.title.contains(search) | 
+            BlogPost.content.contains(search) |
+            BlogPost.tags.contains(search)
+        )
+    
+    # Apply tag filter
+    if tag:
+        query = query.filter(BlogPost.tags.contains(tag))
+    
+    # Paginate results
+    posts = query.order_by(BlogPost.created_at.desc()).paginate(
         page=page, per_page=per_page, error_out=False
     )
     

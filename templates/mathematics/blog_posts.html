@@ -1,0 +1,207 @@
+{% extends "field_base.html" %}
+
+{% block title %}Math Blog Posts - Learning Hub{% endblock %}
+
+{% block field_content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-blog me-2"></i>Mathematics Blog Posts</h2>
+        <p class="text-muted">Mathematical insights, tutorials, and discoveries</p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('mathematics.create_blog_post_form') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Create New Post
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-6">
+                <label for="search" class="form-label">Search Posts</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ request.args.get('search', '') }}" 
+                       placeholder="Search by title, content, or tags...">
+            </div>
+            <div class="col-md-3">
+                <label for="tag" class="form-label">Filter by Tag</label>
+                <select class="form-select" id="tag" name="tag">
+                    <option value="">All Tags</option>
+                    <option value="algebra" {{ 'selected' if request.args.get('tag') == 'algebra' }}>Algebra</option>
+                    <option value="calculus" {{ 'selected' if request.args.get('tag') == 'calculus' }}>Calculus</option>
+                    <option value="geometry" {{ 'selected' if request.args.get('tag') == 'geometry' }}>Geometry</option>
+                    <option value="statistics" {{ 'selected' if request.args.get('tag') == 'statistics' }}>Statistics</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="fas fa-search me-2"></i>Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Blog Posts Grid -->
+{% if posts.items %}
+<div class="row g-4 mb-4">
+    {% for post in posts.items %}
+    <div class="col-lg-6">
+        <div class="card blog-post-card h-100 shadow-sm border-0">
+            {% if post.featured_image %}
+            <img src="{{ post.featured_image }}" class="card-img-top" alt="{{ post.title }}" style="height: 200px; object-fit: cover;">
+            {% endif %}
+            
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        {{ post.created_at.strftime('%B %d, %Y') if post.created_at else 'Recent' }}
+                    </small>
+                    {% if post.reading_time %}
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        {{ post.reading_time }} min read
+                    </small>
+                    {% endif %}
+                </div>
+                
+                <h5 class="card-title">
+                    <a href="{{ url_for('mathematics.blog_post_detail', post_id=post.id) }}" class="text-decoration-none">
+                        {{ post.title }}
+                    </a>
+                </h5>
+                
+                {% if post.excerpt %}
+                <p class="card-text text-muted">{{ post.excerpt }}</p>
+                {% else %}
+                <p class="card-text text-muted">
+                    {{ post.content[:150] }}{% if post.content|length > 150 %}...{% endif %}
+                </p>
+                {% endif %}
+                
+                <!-- Tags -->
+                {% if post.tags %}
+                <div class="mb-3">
+                    {% for tag in post.tags.split(',') %}
+                    {% if tag.strip() %}
+                    <span class="badge bg-secondary me-1">{{ tag.strip() }}</span>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <!-- Author and Stats -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fas fa-user me-1"></i>{{ post.author or 'Admin' }}
+                    </small>
+                    <small class="text-muted">
+                        <i class="fas fa-eye me-1"></i>{{ post.views or 0 }} views
+                    </small>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-transparent border-0">
+                <a href="{{ url_for('mathematics.blog_post_detail', post_id=post.id) }}" class="btn btn-outline-primary btn-sm">
+                    <i class="fas fa-arrow-right me-1"></i>Read More
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if posts.pages > 1 %}
+<div class="d-flex justify-content-center">
+    <nav aria-label="Blog posts pagination">
+        <ul class="pagination">
+            {% if posts.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('mathematics.blog_posts', page=posts.prev_num, **request.args) }}">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for page_num in posts.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != posts.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('mathematics.blog_posts', page=page_num, **request.args) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if posts.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('mathematics.blog_posts', page=posts.next_num, **request.args) }}">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
+{% else %}
+<!-- No Posts Found -->
+<div class="text-center py-5">
+    <i class="fas fa-blog fa-4x text-muted mb-3"></i>
+    {% if request.args.get('search') or request.args.get('tag') %}
+    <h4>No posts found</h4>
+    <p class="text-muted">No posts match your search criteria.</p>
+    <a href="{{ url_for('mathematics.blog_posts') }}" class="btn btn-outline-primary me-2">
+        <i class="fas fa-times me-1"></i>Clear Filters
+    </a>
+    {% else %}
+    <h4>No blog posts yet</h4>
+    <p class="text-muted">Be the first to share mathematical insights!</p>
+    {% endif %}
+    <a href="{{ url_for('mathematics.create_blog_post_form') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Create First Post
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-submit search form with debounce
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search');
+    const tagSelect = document.getElementById('tag');
+    let searchTimeout;
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                this.form.submit();
+            }, 500);
+        });
+    }
+
+    if (tagSelect) {
+        tagSelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+    }
+});
+</script>
+{% endblock %}

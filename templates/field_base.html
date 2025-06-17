@@ -1,9 +1,10 @@
+<!-- templates/field_base.html - Base template for all field pages -->
 {% extends "base.html" %}
 
-{% block body_class %}field-{{ field_key }} {{ field_info.theme }}{% endblock %}
+{% block body_class %}field-{{ field_key }} {{ field_info.theme if field_info else 'default-theme' }}{% endblock %}
 
 {% block content %}
-<div class="field-header py-5 text-white position-relative overflow-hidden">
+<div class="field-header py-5 text-white position-relative overflow-hidden {{ field_info.theme if field_info else 'math-theme' }}">
     <div class="field-bg-animation"></div>
     <div class="container position-relative">
         <div class="row align-items-center">
@@ -11,23 +12,13 @@
                 <div class="field-header-content" data-aos="fade-right">
                     <div class="d-flex align-items-center mb-3">
                         <div class="field-icon-large me-4">
-                            <i class="{{ field_info.icon }} fa-3x"></i>
+                            <i class="{{ field_info.icon if field_info else 'fas fa-calculator' }} fa-3x"></i>
                         </div>
                         <div>
-                            <h1 class="display-5 fw-bold mb-2">{{ field_info.name }}</h1>
-                            <p class="lead mb-0">{{ field_info.description }}</p>
+                            <h1 class="display-5 fw-bold mb-2">{{ field_info.name if field_info else field_key.title() }}</h1>
+                            <p class="lead mb-0">{{ field_info.description if field_info else 'Field description' }}</p>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="field-stats" data-aos="fade-left">
-                    {% block field_stats %}
-                    <div class="stat-card">
-                        <div class="stat-number">{{ total_content|default(0) }}</div>
-                        <div class="stat-label">Total Content</div>
-                    </div>
-                    {% endblock %}
                 </div>
             </div>
         </div>
