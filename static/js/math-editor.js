@@ -1,4 +1,3 @@
-// static/js/math-editor.js - Enhanced and debugged version
 class MathEditor {
     constructor() {
         this.input = null;
@@ -6,11 +5,11 @@ class MathEditor {
         this.debounceTimer = null;
         this.cursorPosition = 0;
         this.isInitialized = false;
+        this.mathJaxReady = false;
         this.init();
     }
 
     init() {
-        // Initialize immediately if DOM is ready, otherwise wait
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => this.initializeEditor());
         } else {
@@ -21,7 +20,6 @@ class MathEditor {
     initializeEditor() {
         console.log('Initializing Math Editor...');
         
-        // Initialize elements when modal is shown
         const modal = document.getElementById('mathEditorModal');
         if (modal) {
             modal.addEventListener('shown.bs.modal', () => {
@@ -51,21 +49,23 @@ class MathEditor {
     }
 
     ensureMathJax() {
-        if (window.MathJax) {
-            console.log('MathJax already loaded');
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            console.log('MathJax already loaded and ready');
+            this.mathJaxReady = true;
             this.renderInitialMath();
             return;
         }
 
-        console.log('Loading MathJax...');
+        console.log('Loading/configuring MathJax...');
         
-        // Configure MathJax before loading
+        // Enhanced MathJax configuration
         window.MathJax = {
             tex: {
                 inlineMath: [['\\(', '\\)']],
                 displayMath: [['\\[', '\\]']],
                 processEscapes: true,
-                processEnvironments: true
+                processEnvironments: true,
+                packages: {'[+]': ['ams', 'newcommand', 'configmacros', 'autoload', 'require']}
             },
             options: {
                 ignoreHtmlClass: 'tex2jax_ignore',
@@ -75,25 +75,51 @@ class MathEditor {
                 ready: () => {
                     MathJax.startup.defaultReady();
                     console.log('MathJax fully loaded and ready');
+                    this.mathJaxReady = true;
                     this.renderInitialMath();
+                    
+                    // Test MathJax with a simple equation
+                    this.testMathJaxRendering();
                 }
             }
         };
 
-        // Load MathJax script
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
-        script.async = true;
-        document.head.appendChild(script);
+        // Load MathJax if not already loaded
+        if (!document.getElementById('MathJax-script')) {
+            const script = document.createElement('script');
+            script.id = 'MathJax-script';
+            script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+            script.async = true;
+            document.head.appendChild(script);
+        }
+    }
+
+    testMathJaxRendering() {
+        // Test if MathJax is working by rendering a simple equation
+        const testDiv = document.createElement('div');
+        testDiv.innerHTML = 'Test: \\(x^2 + y^2 = z^2\\)';
+        testDiv.style.display = 'none';
+        document.body.appendChild(testDiv);
+        
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            MathJax.typesetPromise([testDiv]).then(() => {
+                console.log('MathJax test rendering successful');
+                document.body.removeChild(testDiv);
+            }).catch(err => {
+                console.error('MathJax test rendering failed:', err);
+                document.body.removeChild(testDiv);
+            });
+        }
     }
 
     renderInitialMath() {
-        // Render any existing math symbols in the toolbar
         if (window.MathJax && window.MathJax.typesetPromise) {
             const toolbar = document.querySelector('.math-toolbar');
             if (toolbar) {
                 MathJax.typesetPromise([toolbar]).then(() => {
                     console.log('Toolbar math symbols rendered');
+                }).catch(err => {
+                    console.error('Toolbar rendering error:', err);
                 });
             }
         }
@@ -123,33 +149,6 @@ class MathEditor {
         console.log('Math editor event listeners set up');
     }
 
-    handleKeyboardShortcuts(e) {
-        // Ctrl/Cmd + F for fraction
-        if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-            e.preventDefault();
-            this.insertMath('\\frac{}{}');
-        }
-        
-        // Ctrl/Cmd + R for square root
-        if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
-            e.preventDefault();
-            this.insertMath('\\sqrt{}');
-        }
-        
-        // Ctrl/Cmd + I for integral
-        if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
-            e.preventDefault();
-            this.insertMath('\\int_{}^{}');
-        }
-    }
-
-    updateCharCount() {
-        const charCount = document.getElementById('charCount');
-        if (charCount && this.input) {
-            charCount.textContent = this.input.value.length;
-        }
-    }
-
     debouncePreview() {
         clearTimeout(this.debounceTimer);
         this.debounceTimer = setTimeout(() => {
@@ -158,34 +157,72 @@ class MathEditor {
     }
 
     updatePreview() {
-        if (!this.preview || !this.input) return;
+        if (!this.preview || !this.input) {
+            console.warn('Preview elements not available');
+            return;
+        }
 
         const latex = this.input.value.trim();
+        console.log('Updating preview with:', latex);
         
         if (latex === '') {
             this.preview.innerHTML = `
                 <div class="text-center text-muted">
                     <i class="fas fa-eye fa-2x mb-2"></i>
                     <p>Preview will appear here</p>
+                    <small>Try typing: \\frac{a}{b} or \\sqrt{x^2 + y^2}</small>
                 </div>
             `;
             return;
         }
 
-        // Wrap content for MathJax processing
-        this.preview.innerHTML = `<div class="tex2jax_process">${latex}</div>`;
+        // Wrap content for MathJax processing with proper delimiters
+        let processedLatex = latex;
+        
+        // If the input doesn't have math delimiters, add them
+        if (!latex.includes('\\(') && !latex.includes('\\[')) {
+            // For display math (block)
+            if (latex.includes('\\frac') || latex.includes('\\sum') || latex.includes('\\int')) {
+                processedLatex = `\\[${latex}\\]`;
+            } else {
+                // For inline math
+                processedLatex = `\\(${latex}\\)`;
+            }
+        }
+        
+        this.preview.innerHTML = `<div class="tex2jax_process">${processedLatex}</div>`;
 
-        // Re-render MathJax
-        if (window.MathJax && window.MathJax.typesetPromise) {
-            MathJax.typesetPromise([this.preview]).catch((err) => {
-                console.log('MathJax error:', err);
+        // Force MathJax re-rendering
+        if (window.MathJax && window.MathJax.typesetPromise && this.mathJaxReady) {
+            console.log('Rendering with MathJax...');
+            
+            MathJax.typesetPromise([this.preview]).then(() => {
+                console.log('MathJax rendering completed successfully');
+            }).catch((err) => {
+                console.error('MathJax rendering error:', err);
                 this.preview.innerHTML = `
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle me-2"></i>
-                        LaTeX syntax error. Please check your input.
+                        <strong>LaTeX Error:</strong> ${err.message || 'Please check your syntax'}
+                        <br><small class="text-muted">Input: ${latex}</small>
                     </div>
                 `;
             });
+        } else {
+            console.warn('MathJax not ready yet');
+            this.preview.innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-spinner fa-spin me-2"></i>
+                    Loading MathJax renderer...
+                </div>
+            `;
+            
+            // Retry after a short delay
+            setTimeout(() => {
+                if (this.mathJaxReady) {
+                    this.updatePreview();
+                }
+            }, 1000);
         }
     }
 
@@ -215,6 +252,23 @@ class MathEditor {
         this.input.focus();
         this.updateCharCount();
         this.debouncePreview();
+    }
+
+    updateCharCount() {
+        const charCount = document.getElementById('charCount');
+        if (charCount && this.input) {
+            charCount.textContent = this.input.value.length;
+        }
+    }
+
+    // Add test function for debugging
+    testPreview() {
+        console.log('Testing preview...');
+        if (this.input) {
+            this.input.value = '\\frac{a}{b}';
+            this.updateCharCount();
+            this.updatePreview();
+        }
     }
 
     insertMatrix(rows, cols) {
