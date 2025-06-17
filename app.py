@@ -1,0 +1,86 @@
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from datetime import datetime
+import os
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///learning_hub.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+# Import blueprints
+from fields.mathematics import math_bp
+from fields.programming import programming_bp
+from fields.english import english_bp
+from fields.danish import danish_bp
+from fields.recipes import recipes_bp
+
+# Register blueprints with URL prefixes
+app.register_blueprint(math_bp, url_prefix='/mathematics')
+app.register_blueprint(programming_bp, url_prefix='/programming')
+app.register_blueprint(english_bp, url_prefix='/english')
+app.register_blueprint(danish_bp, url_prefix='/danish')
+app.register_blueprint(recipes_bp, url_prefix='/recipes')
+
+# Field configuration for easy expansion
+FIELDS_CONFIG = {
+    'mathematics': {
+        'name': 'Mathematics',
+        'icon': 'fas fa-calculator',
+        'color': '#4CAF50',
+        'theme': 'math-theme',
+        'description': 'Explore the world of numbers, equations, and mathematical concepts',
+        'features': ['Problem Solving', 'Formulas', 'Visual Learning', 'Practice Tests']
+    },
+    'programming': {
+        'name': 'Programming',
+        'icon': 'fas fa-code',
+        'color': '#2196F3',
+        'theme': 'code-theme',
+        'description': 'Master coding with examples in Python, Java, C# and more',
+        'features': ['Code Examples', 'Tutorials', 'Best Practices', 'Project Ideas']
+    },
+    'english': {
+        'name': 'English Learning',
+        'icon': 'fas fa-language',
+        'color': '#FF9800',
+        'theme': 'language-theme',
+        'description': 'Improve your English with interactive lessons and practice',
+        'features': ['Flash Cards', 'Grammar', 'Practice Tests', 'Pronunciation']
+    },
+    'danish': {
+        'name': 'Danish Learning',
+        'icon': 'fas fa-flag',
+        'color': '#F44336',
+        'theme': 'danish-theme',
+        'description': 'Learn Danish language and culture effectively',
+        'features': ['Flash Cards', 'Grammar', 'Cultural Notes', 'Speaking Practice']
+    },
+    'recipes': {
+        'name': 'Vegan Recipes',
+        'icon': 'fas fa-leaf',
+        'color': '#8BC34A',
+        'theme': 'recipe-theme',
+        'description': 'Delicious plant-based recipes for healthy living',
+        'features': ['Recipe Cards', 'Nutrition Info', 'Meal Planning', 'Cooking Tips']
+    }
+}
+
+@app.route('/')
+def home():
+    """Dashboard/Home page with field overview"""
+    return render_template('dashboard.html', fields=FIELDS_CONFIG)
+
+@app.route('/api/fields')
+def api_fields():
+    """API endpoint for field configuration"""
+    return jsonify(FIELDS_CONFIG)
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True, host='0.0.0.0', port=5000)
