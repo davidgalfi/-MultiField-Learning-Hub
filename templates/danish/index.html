@@ -1,0 +1,241 @@
+<!-- templates/danish/index.html - Danish learning overview -->
+{% extends "field_base.html" %}
+
+{% block title %}Danish Learning - Learning Hub{% endblock %}
+
+{% block field_content %}
+<!-- Quick Actions -->
+<div class="row g-4 mb-5">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header bg-gradient-danish text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-rocket me-2"></i>Start Learning Danish
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('danish.flashcards') }}" class="btn btn-outline-success w-100 h-100 py-3 text-decoration-none">
+                            <i class="fas fa-cards fa-2x mb-2 d-block"></i>
+                            <strong>Flash Cards</strong>
+                            <small class="d-block text-muted">Learn vocabulary</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('danish.culture') }}" class="btn btn-outline-info w-100 h-100 py-3 text-decoration-none">
+                            <i class="fas fa-landmark fa-2x mb-2 d-block"></i>
+                            <strong>Danish Culture</strong>
+                            <small class="d-block text-muted">Learn about Denmark</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('danish.pronunciation') }}" class="btn btn-outline-warning w-100 h-100 py-3 text-decoration-none">
+                            <i class="fas fa-volume-up fa-2x mb-2 d-block"></i>
+                            <strong>Pronunciation</strong>
+                            <small class="d-block text-muted">Master Danish sounds</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-danger w-100 h-100 py-3" onclick="startCulturalQuiz()">
+                            <i class="fas fa-question-circle fa-2x mb-2 d-block"></i>
+                            <strong>Cultural Quiz</strong>
+                            <small class="d-block text-muted">Test your knowledge</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Learning Progress -->
+<div class="row g-4 mb-5">
+    <div class="col-lg-8" data-aos="fade-right">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-line me-2"></i>Your Progress
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_flashcards %}
+                <div class="row g-3">
+                    {% for card in recent_flashcards %}
+                    <div class="col-md-6">
+                        <div class="flashcard-preview card bg-light border-0">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-primary">{{ card.category.title() }}</span>
+                                    <span class="badge bg-secondary">{{ card.difficulty.title() }}</span>
+                                </div>
+                                <div class="flashcard-front mb-2">
+                                    <strong>{{ card.front_text[:30] }}{% if card.front_text|length > 30 %}...{% endif %}</strong>
+                                </div>
+                                <div class="progress mb-2">
+                                    {% set success_rate = (card.correct_answers / card.times_reviewed * 100) if card.times_reviewed > 0 else 0 %}
+                                    <div class="progress-bar bg-success" role="progressbar" 
+                                         style="width: ' {{ success_rate }} % ' "
+                                         aria-valuenow="{{ success_rate }}" aria-valuemin="0" aria-valuemax="100">
+                                        {{ "%.0f"|format(success_rate) }}%
+                                    </div>
+                                </div>
+                                <small class="text-muted">Reviewed {{ card.times_reviewed }} times</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-flag fa-3x text-muted mb-3"></i>
+                    <h6>Start Learning Danish!</h6>
+                    <p class="text-muted">Begin with some basic vocabulary flashcards.</p>
+                    <a href="{{ url_for('danish.flashcards') }}" class="btn btn-primary">
+                        <i class="fas fa-play me-2"></i>Start with Flash Cards
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4" data-aos="fade-left">
+        <div class="card border-0 shadow-lg mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-brain me-2"></i>Did You Know?
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="danish-fact">
+                    <p class="mb-3">
+                        <i class="fas fa-quote-left text-muted me-2"></i>
+                        Danish has a unique feature called "stød" - a glottal stop that can completely change the meaning of words!
+                    </p>
+                    <small class="text-muted">
+                        Example: "hund" (dog) vs "hun" (she) - the stød makes the difference!
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card border-0 shadow-lg">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Learning Stats
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="stats-grid">
+                    <div class="stat-item mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Flash Cards</span>
+                            <strong class="text-primary">{{ stats.total_flashcards }}</strong>
+                        </div>
+                    </div>
+                    <div class="stat-item mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Grammar Rules</span>
+                            <strong class="text-success">{{ stats.grammar_rules }}</strong>
+                        </div>
+                    </div>
+                    <div class="stat-item mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Blog Posts</span>
+                            <strong class="text-info">{{ stats.total_posts }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Common Danish Phrases -->
+<div class="row g-4">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-comments me-2"></i>Essential Danish Phrases
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="phrase-card">
+                            <h6 class="text-primary">Hej!</h6>
+                            <p class="text-muted mb-1">[hi]</p>
+                            <small>Hello!</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="phrase-card">
+                            <h6 class="text-primary">Tak!</h6>
+                            <p class="text-muted mb-1">[tak]</p>
+                            <small>Thanks!</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="phrase-card">
+                            <h6 class="text-primary">Undskyld</h6>
+                            <p class="text-muted mb-1">[OON-skil]</p>
+                            <small>Excuse me</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="phrase-card">
+                            <h6 class="text-primary">Hyggeligt!</h6>
+                            <p class="text-muted mb-1">[HUG-uh-lee]</p>
+                            <small>Cozy/Nice!</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="phrase-card">
+                            <h6 class="text-primary">Jeg hedder...</h6>
+                            <p class="text-muted mb-1">[yi HEH-ther]</p>
+                            <small>My name is...</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="phrase-card">
+                            <h6 class="text-primary">Skål!</h6>
+                            <p class="text-muted mb-1">[skawl]</p>
+                            <small>Cheers!</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Cultural quiz functionality
+function startCulturalQuiz() {
+    fetch('/danish/api/cultural-quiz')
+        .then(response => response.json())
+        .then(data => {
+            showQuizModal(data.questions);
+        })
+        .catch(error => {
+            console.error('Error loading quiz:', error);
+            alert('Failed to load cultural quiz. Please try again.');
+        });
+}
+
+function showQuizModal(questions) {
+    // Create quiz modal (implement based on your modal system)
+    alert(`Cultural Quiz loaded with ${questions.length} questions! (Modal implementation needed)`);
+}
+
+// Pronunciation audio (placeholder)
+function playPronunciation(word) {
+    // Implement text-to-speech or audio playback
+    console.log(`Playing pronunciation for: ${word}`);
+}
+</script>
+{% endblock %}
