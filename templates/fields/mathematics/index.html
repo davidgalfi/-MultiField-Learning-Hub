@@ -1,0 +1,201 @@
+{% extends "field_base.html" %}
+
+{% block title %}Mathematics - Learning Hub{% endblock %}
+
+{% block field_stats %}
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_problems }}</div>
+            <div class="stat-label">Problems</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.total_posts }}</div>
+            <div class="stat-label">Blog Posts</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="stat-card">
+            <div class="stat-number">{{ stats.categories|length }}</div>
+            <div class="stat-label">Categories</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block field_content %}
+<!-- Quick Actions -->
+<div class="row g-4 mb-5">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header bg-gradient-math text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-rocket me-2"></i>Quick Start Mathematics
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-success w-100 h-100 py-3" onclick="createMathPost()">
+                            <i class="fas fa-plus fa-2x mb-2 d-block"></i>
+                            <strong>Create Math Post</strong>
+                            <small class="d-block text-muted">Write with LaTeX editor</small>
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-info w-100 h-100 py-3" onclick="addProblem()">
+                            <i class="fas fa-brain fa-2x mb-2 d-block"></i>
+                            <strong>Add Problem</strong>
+                            <small class="d-block text-muted">Create math problems</small>
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('mathematics.formulas') }}" class="btn btn-outline-warning w-100 h-100 py-3 text-decoration-none">
+                            <i class="fas fa-function fa-2x mb-2 d-block"></i>
+                            <strong>Formula Reference</strong>
+                            <small class="d-block text-muted">Mathematical formulas</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-danger w-100 h-100 py-3" onclick="openMathEditor()">
+                            <i class="fas fa-edit fa-2x mb-2 d-block"></i>
+                            <strong>Math Editor</strong>
+                            <small class="d-block text-muted">Interactive LaTeX editor</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Problems -->
+<div class="row g-4 mb-5">
+    <div class="col-lg-8" data-aos="fade-right">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calculator me-2"></i>Recent Problems
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_problems %}
+                <div class="row g-3">
+                    {% for problem in recent_problems %}
+                    <div class="col-md-6">
+                        <div class="problem-card card h-100 border-0 bg-light">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-primary">{{ problem.category.title() }}</span>
+                                    <span class="badge bg-secondary">{{ problem.difficulty.title() }}</span>
+                                </div>
+                                <h6 class="card-title">{{ problem.title }}</h6>
+                                <div class="math-preview mb-2">
+                                    {{ problem.problem_text[:100] }}...
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ problem.attempts }} attempts</small>
+                                    <a href="{{ url_for('mathematics.problem_detail', problem_id=problem.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        Solve
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-calculator fa-3x text-muted mb-3"></i>
+                    <h6>No problems yet</h6>
+                    <p class="text-muted">Start by adding your first math problem!</p>
+                    <button class="btn btn-primary" onclick="addProblem()">
+                        <i class="fas fa-plus me-2"></i>Add Problem
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4" data-aos="fade-left">
+        <div class="card border-0 shadow-lg mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Categories
+                </h5>
+            </div>
+            <div class="card-body">
+                {% for category in stats.categories %}
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span>{{ category.title() }}</span>
+                    <span class="badge bg-primary">{{ stats.difficulty_distribution.get(category, 0) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="card border-0 shadow-lg">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Math Tip
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="math-tip">
+                    <p class="mb-3">
+                        <i class="fas fa-quote-left text-muted me-2"></i>
+                        Remember: \( \int_0^{\infty} e^{-x^2} dx = \frac{\sqrt{\pi}}{2} \)
+                    </p>
+                    <small class="text-muted">Gaussian integral - fundamental in probability theory</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Blog Posts -->
+<div class="row g-4">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-blog me-2"></i>Recent Blog Posts
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_posts %}
+                <div class="row g-3">
+                    {% for post in recent_posts %}
+                    <div class="col-md-4">
+                        <div class="blog-card card h-100 border-0">
+                            <div class="card-body">
+                                <h6 class="card-title">{{ post.title }}</h6>
+                                <p class="card-text text-muted">{{ post.excerpt }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ post.created_at.strftime('%M %d') }}</small>
+                                    <a href="#" class="btn btn-sm btn-outline-primary">Read More</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-blog fa-3x text-muted mb-3"></i>
+                    <h6>No blog posts yet</h6>
+                    <p class="text-muted">Share your mathematical insights!</p>
+                    <button class="btn btn-primary" onclick="createMathPost()">
+                        <i class="fas fa-plus me-2"></i>Create Post
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

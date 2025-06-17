@@ -1,0 +1,166 @@
+/* Math Editor Toolbar */
+.math-toolbar {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 2px solid #dee2e6;
+}
+
+.math-toolbar .btn-group .btn {
+    border-radius: 8px;
+    margin: 0 2px;
+    transition: all 0.2s ease;
+}
+
+.math-toolbar .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.math-symbol {
+    font-size: 14px;
+    display: inline-block;
+    min-width: 20px;
+}
+
+/* Math Input Area */
+.math-input {
+    font-family: 'Fira Code', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    transition: border-color 0.3s ease;
+}
+
+.math-input:focus {
+    border-color: var(--math-primary);
+    box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+}
+
+.input-helper {
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    right: 0;
+}
+
+/* Math Preview Area */
+.math-preview-area {
+    min-height: 400px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-size: 16px;
+    line-height: 1.6;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+}
+
+.math-preview-area .MathJax {
+    font-size: 1.1em !important;
+}
+
+/* Modal Enhancements */
+.modal-xl {
+    max-width: 90vw;
+}
+
+.math-editor-container {
+    height: 80vh;
+    overflow: hidden;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .math-toolbar .btn-group {
+        flex-wrap: wrap;
+    }
+    
+    .math-toolbar .btn {
+        margin-bottom: 5px;
+    }
+    
+    .modal-xl {
+        max-width: 95vw;
+        margin: 10px auto;
+    }
+    
+    .math-editor-container {
+        height: 70vh;
+    }
+}
+
+/* Field-specific styling for math theme */
+.math-theme {
+    --primary-color: var(--math-primary);
+    --secondary-color: var(--math-secondary);
+}
+
+.bg-gradient-math {
+    background: linear-gradient(135deg, var(--math-primary) 0%, var(--math-secondary) 100%) !important;
+}
+
+/* Problem and blog card styling */
+.problem-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.problem-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.blog-card {
+    transition: all 0.3s ease;
+}
+
+.blog-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* Math tip styling */
+.math-tip {
+    padding: 1rem;
+    border-left: 4px solid var(--math-primary);
+    background: rgba(76, 175, 80, 0.05);
+    border-radius: 0 8px 8px 0;
+}
+
+/* Character counter */
+#charCount {
+    font-weight: 600;
+    color: var(--math-primary);
+}
+
+/* Toolbar responsive grouping */
+.math-toolbar .row {
+    --bs-gutter-x: 0.5rem;
+}
+
+.math-toolbar .col-auto {
+    margin-bottom: 0.5rem;
+}
+
+/* Enhanced button styling */
+.btn-outline-secondary.math-symbol:hover {
+    background-color: var(--math-primary);
+    border-color: var(--math-primary);
+    color: white;
+}
+
+/* Success animation for notifications */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.alert.position-fixed {
+    animation: slideInRight 0.3s ease-out;
+}

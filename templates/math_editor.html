@@ -1,0 +1,242 @@
+<div class="modal fade" id="mathEditorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-edit me-2"></i>Mathematics Editor
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="math-editor-container">
+                    <!-- Toolbar -->
+                    <div class="math-toolbar p-3 border-bottom">
+                        <div class="row g-2">
+                            <!-- Basic Operations -->
+                            <div class="col-auto">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\frac{}{}')" title="Fraction">
+                                        <span class="math-symbol">\( \frac{a}{b} \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('^{}')" title="Superscript">
+                                        <span class="math-symbol">\( x^n \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('_{}')" title="Subscript">
+                                        <span class="math-symbol">\( x_n \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\sqrt{}')" title="Square Root">
+                                        <span class="math-symbol">\( \sqrt{x} \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\sqrt[n]{}')" title="Nth Root">
+                                        <span class="math-symbol">\( \sqrt[n]{x} \)</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Greek Letters -->
+                            <div class="col-auto">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\alpha')" title="Alpha">
+                                        <span class="math-symbol">\( \alpha \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\beta')" title="Beta">
+                                        <span class="math-symbol">\( \beta \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\gamma')" title="Gamma">
+                                        <span class="math-symbol">\( \gamma \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\pi')" title="Pi">
+                                        <span class="math-symbol">\( \pi \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\phi')" title="Phi">
+                                        <span class="math-symbol">\( \phi \)</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Calculus -->
+                            <div class="col-auto">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\int_{a}^{b}')" title="Integral">
+                                        <span class="math-symbol">\( \int_a^b \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\sum_{i=1}^{n}')" title="Summation">
+                                        <span class="math-symbol">\( \sum_{i=1}^n \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\prod_{i=1}^{n}')" title="Product">
+                                        <span class="math-symbol">\( \prod_{i=1}^n \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\lim_{x \\to a}')" title="Limit">
+                                        <span class="math-symbol">\( \lim_{x \to a} \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\frac{d}{dx}')" title="Derivative">
+                                        <span class="math-symbol">\( \frac{d}{dx} \)</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Second Row -->
+                        <div class="row g-2 mt-2">
+                            <!-- Matrices -->
+                            <div class="col-auto">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMatrix(2, 2)" title="2x2 Matrix">
+                                        <span class="math-symbol">\( \begin{pmatrix} a & b \\ c & d \end{pmatrix} \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMatrix(3, 3)" title="3x3 Matrix">
+                                        <span class="math-symbol">\( 3×3 \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertVector()" title="Vector">
+                                        <span class="math-symbol">\( \vec{v} \)</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Set Theory -->
+                            <div class="col-auto">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\in')" title="Element of">
+                                        <span class="math-symbol">\( \in \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\notin')" title="Not element of">
+                                        <span class="math-symbol">\( \notin \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\subset')" title="Subset">
+                                        <span class="math-symbol">\( \subset \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\cup')" title="Union">
+                                        <span class="math-symbol">\( \cup \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\cap')" title="Intersection">
+                                        <span class="math-symbol">\( \cap \)</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Logic -->
+                            <div class="col-auto">
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\forall')" title="For all">
+                                        <span class="math-symbol">\( \forall \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\exists')" title="Exists">
+                                        <span class="math-symbol">\( \exists \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\Rightarrow')" title="Implies">
+                                        <span class="math-symbol">\( \Rightarrow \)</span>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\Leftrightarrow')" title="If and only if">
+                                        <span class="math-symbol">\( \Leftrightarrow \)</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Templates -->
+                            <div class="col-auto">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" 
+                                            data-bs-toggle="dropdown">
+                                        <i class="fas fa-templates me-1"></i>Templates
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="#" onclick="insertTemplate('quadratic')">Quadratic Formula</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="insertTemplate('taylor')">Taylor Series</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="insertTemplate('fourier')">Fourier Transform</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="insertTemplate('binomial')">Binomial Theorem</a></li>
+                                        <li><a class="dropdown-item" href="#" onclick="insertTemplate('definite_integral')">Definite Integral</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Editor Area -->
+                    <div class="row g-0">
+                        <!-- Input Panel -->
+                        <div class="col-md-6 border-end">
+                            <div class="p-3">
+                                <div class="form-group mb-3">
+                                    <label class="form-label fw-bold">LaTeX Input:</label>
+                                    <div class="position-relative">
+                                        <textarea id="mathInput" class="form-control math-input" 
+                                                  rows="20" placeholder="Enter LaTeX math expressions here...&#10;Example: &#10;\frac{-b \pm \sqrt{b^2 - 4ac}}{2a}&#10;&#10;\sum_{i=1}^{n} i = \frac{n(n+1)}{2}"></textarea>
+                                        <div class="input-helper">
+                                            <small class="text-muted">
+                                                Use \( \) for inline math, \[ \] for display math
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Quick Actions -->
+                                <div class="d-flex gap-2 mb-3">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\( \\)')">Inline Math</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="insertMath('\\[ \\]')">Display Math</button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" 
+                                            onclick="clearInput()">Clear</button>
+                                </div>
+                                
+                                <!-- Character Count -->
+                                <div class="text-muted small">
+                                    Characters: <span id="charCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Preview Panel -->
+                        <div class="col-md-6">
+                            <div class="p-3">
+                                <label class="form-label fw-bold">Live Preview:</label>
+                                <div id="mathPreview" class="math-preview-area p-3 border rounded bg-light">
+                                    <div class="text-center text-muted">
+                                        <i class="fas fa-eye fa-2x mb-2"></i>
+                                        <p>Preview will appear here</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="copyToClipboard()">
+                    <i class="fas fa-copy me-2"></i>Copy LaTeX
+                </button>
+                <button type="button" class="btn btn-success" onclick="insertIntoPost()">
+                    <i class="fas fa-plus me-2"></i>Insert into Post
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -11,7 +11,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     
-    {% block extra_css %}{% endblock %}
+    {% block extra_css %}
+        <link href="{{ url_for('static', filename='css/math-editor.css') }}" rel="stylesheet">
+        <!-- MathJax Configuration -->
+        <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true,
+                packages: {'[+]': ['ams', 'newcommand', 'configmacros']}
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            }
+        };
+        </script>
+        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    {% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
     <!-- Navigation -->
@@ -111,6 +130,30 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-    {% block extra_js %}{% endblock %}
+    {% block extra_js %}
+        <script src="{{ url_for('static', filename='js/math-editor.js') }}"></script>
+        <script>
+        // Math field specific functions
+        function createMathPost() {
+            // Open blog post creation with math editor
+            window.location.href = '/mathematics/blog/create';
+        }
+
+        function addProblem() {
+            // Open problem creation form
+            window.location.href = '/mathematics/problems/create';
+        }
+
+        // Initialize math rendering on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Render any existing math on the page
+            if (window.MathJax) {
+                MathJax.typesetPromise().then(() => {
+                    console.log('Math rendering complete');
+                });
+            }
+        });
+        </script>
+    {% endblock %}
 </body>
 </html>
