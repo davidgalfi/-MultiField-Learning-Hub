@@ -1,0 +1,239 @@
+{% extends "field_base.html" %}
+
+{% block title %}Vegan Recipes - Learning Hub{% endblock %}
+
+{% block field_content %}
+<!-- Quick Actions -->
+<div class="row g-4 mb-5">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header bg-gradient-recipe text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-utensils me-2"></i>Recipe Kitchen
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('recipes.browse_recipes') }}" class="btn btn-outline-success w-100 h-100 py-3 text-decoration-none">
+                            <i class="fas fa-search fa-2x mb-2 d-block"></i>
+                            <strong>Browse Recipes</strong>
+                            <small class="d-block text-muted">Find your next meal</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('recipes.meal_plan') }}" class="btn btn-outline-info w-100 h-100 py-3 text-decoration-none">
+                            <i class="fas fa-calendar-alt fa-2x mb-2 d-block"></i>
+                            <strong>Meal Planning</strong>
+                            <small class="d-block text-muted">Plan your week</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('recipes.nutrition_calculator') }}" class="btn btn-outline-warning w-100 h-100 py-3 text-decoration-none">
+                            <i class="fas fa-calculator fa-2x mb-2 d-block"></i>
+                            <strong>Nutrition Calc</strong>
+                            <small class="d-block text-muted">Calculate nutrients</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-outline-danger w-100 h-100 py-3" onclick="addRecipe()">
+                            <i class="fas fa-plus fa-2x mb-2 d-block"></i>
+                            <strong>Add Recipe</strong>
+                            <small class="d-block text-muted">Share your creation</small>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Recipes -->
+<div class="row g-4 mb-5">
+    <div class="col-lg-8" data-aos="fade-right">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-star me-2"></i>Featured Recipes
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_recipes %}
+                <div class="row g-3">
+                    {% for recipe in recent_recipes %}
+                    <div class="col-md-6">
+                        <div class="recipe-card card h-100 border-0 bg-light">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-success">{{ recipe.category.title() }}</span>
+                                    <div class="recipe-rating">
+                                        {% for i in range(5) %}
+                                        <i class="fas fa-star{% if i >= recipe.rating %} text-muted{% else %} text-warning{% endif %}"></i>
+                                        {% endfor %}
+                                        <small class="text-muted ms-1">({{ recipe.rating_count }})</small>
+                                    </div>
+                                </div>
+                                <h6 class="card-title">{{ recipe.title }}</h6>
+                                <p class="card-text text-muted small">{{ recipe.description[:80] }}...</p>
+                                
+                                <div class="recipe-meta d-flex justify-content-between text-muted small mb-2">
+                                    <span><i class="fas fa-clock me-1"></i>{{ recipe.prep_time + recipe.cook_time }}min</span>
+                                    <span><i class="fas fa-users me-1"></i>{{ recipe.servings }} servings</span>
+                                    <span class="badge bg-{{ 'success' if recipe.difficulty == 'easy' else 'warning' if recipe.difficulty == 'medium' else 'danger' }}">
+                                        {{ recipe.difficulty.title() }}
+                                    </span>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ recipe.created_at.strftime('%b %d') if recipe.created_at else 'Recent' }}</small>
+                                    <a href="{{ url_for('recipes.recipe_detail', recipe_id=recipe.id) if recipe.id else '#' }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i>View Recipe
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-utensils fa-3x text-muted mb-3"></i>
+                    <h6>No recipes yet</h6>
+                    <p class="text-muted">Start by adding your first delicious vegan recipe!</p>
+                    <button class="btn btn-primary" onclick="addRecipe()">
+                        <i class="fas fa-plus me-2"></i>Add Recipe
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4" data-aos="fade-left">
+        <div class="card border-0 shadow-lg mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-pie me-2"></i>Recipe Stats
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="stats-grid">
+                    <div class="stat-item mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Total Recipes</span>
+                            <strong class="text-success">{{ stats.total_recipes }}</strong>
+                        </div>
+                    </div>
+                    <div class="stat-item mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Categories</span>
+                            <strong class="text-primary">{{ stats.categories|length }}</strong>
+                        </div>
+                    </div>
+                    <div class="stat-item mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Avg Prep Time</span>
+                            <strong class="text-info">{{ stats.avg_prep_time }}min</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card border-0 shadow-lg">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Cooking Tip
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="cooking-tip">
+                    <p class="mb-3">
+                        <i class="fas fa-quote-left text-muted me-2"></i>
+                        Always prep your vegetables before you start cooking. This "mise en place" technique helps you cook more efficiently!
+                    </p>
+                    <small class="text-muted">Professional cooking technique</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Weekly Meal Plan Preview -->
+<div class="row g-4">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-calendar-week me-2"></i>This Week's Meal Plan
+                </h5>
+                <a href="{{ url_for('recipes.meal_plan') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-calendar-alt me-1"></i>Full Plan
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="meal-plan-preview">
+                    <div class="row g-2">
+                        {% set days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] %}
+                        {% for day in days %}
+                        <div class="col">
+                            <div class="day-card text-center p-2 border rounded">
+                                <strong class="d-block">{{ day }}</strong>
+                                <small class="text-muted">Plan meals</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Recipe field specific functions
+function addRecipe() {
+    // Open recipe creation form
+    alert('Recipe creation form - Coming soon!');
+}
+
+// Recipe rating functionality
+function rateRecipe(recipeId, rating) {
+    fetch(`/recipes/api/recipes/${recipeId}/rate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ rating: rating })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update rating display
+            updateRatingDisplay(recipeId, data.new_rating, data.rating_count);
+            showNotification('Rating saved!', 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Error rating recipe:', error);
+        showNotification('Failed to save rating', 'error');
+    });
+}
+
+function updateRatingDisplay(recipeId, newRating, ratingCount) {
+    // Update the star display for the recipe
+    const ratingElement = document.querySelector(`[data-recipe-id="${recipeId}"] .recipe-rating`);
+    if (ratingElement) {
+        let starsHtml = '';
+        for (let i = 1; i <= 5; i++) {
+            starsHtml += `<i class="fas fa-star ${i <= newRating ? 'text-warning' : 'text-muted'}"></i>`;
+        }
+        starsHtml += `<small class="text-muted ms-1">(${ratingCount})</small>`;
+        ratingElement.innerHTML = starsHtml;
+    }
+}
+</script>
+{% endblock %}

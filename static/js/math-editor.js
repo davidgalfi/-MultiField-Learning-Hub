@@ -1,47 +1,101 @@
+// static/js/math-editor.js - Enhanced and debugged version
 class MathEditor {
     constructor() {
         this.input = null;
         this.preview = null;
         this.debounceTimer = null;
         this.cursorPosition = 0;
+        this.isInitialized = false;
         this.init();
     }
 
     init() {
-        // Wait for DOM to be ready
-        document.addEventListener('DOMContentLoaded', () => {
-            this.input = document.getElementById('mathInput');
-            this.preview = document.getElementById('mathPreview');
-            this.setupEventListeners();
-            this.loadMathJax();
-        });
+        // Initialize immediately if DOM is ready, otherwise wait
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => this.initializeEditor());
+        } else {
+            this.initializeEditor();
+        }
     }
 
-    loadMathJax() {
-        // Load MathJax if not already loaded
-        if (!window.MathJax) {
-            const script = document.createElement('script');
-            script.src = 'https://polyfill.io/v3/polyfill.min.js?features=es6';
-            document.head.appendChild(script);
-
-            const mathJaxScript = document.createElement('script');
-            mathJaxScript.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
-            mathJaxScript.async = true;
-            document.head.appendChild(mathJaxScript);
-
-            // Configure MathJax
-            window.MathJax = {
-                tex: {
-                    inlineMath: [['\\(', '\\)']],
-                    displayMath: [['\\[', '\\]']],
-                    processEscapes: true,
-                    processEnvironments: true
-                },
-                options: {
-                    ignoreHtmlClass: 'tex2jax_ignore',
-                    processHtmlClass: 'tex2jax_process'
+    initializeEditor() {
+        console.log('Initializing Math Editor...');
+        
+        // Initialize elements when modal is shown
+        const modal = document.getElementById('mathEditorModal');
+        if (modal) {
+            modal.addEventListener('shown.bs.modal', () => {
+                this.setupElements();
+                this.setupEventListeners();
+                if (!this.isInitialized) {
+                    this.ensureMathJax();
+                    this.isInitialized = true;
                 }
-            };
+            });
+        } else {
+            console.warn('Math editor modal not found');
+        }
+    }
+
+    setupElements() {
+        this.input = document.getElementById('mathInput');
+        this.preview = document.getElementById('mathPreview');
+        
+        if (!this.input || !this.preview) {
+            console.error('Math editor elements not found');
+            return false;
+        }
+        
+        console.log('Math editor elements found and initialized');
+        return true;
+    }
+
+    ensureMathJax() {
+        if (window.MathJax) {
+            console.log('MathJax already loaded');
+            this.renderInitialMath();
+            return;
+        }
+
+        console.log('Loading MathJax...');
+        
+        // Configure MathJax before loading
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            startup: {
+                ready: () => {
+                    MathJax.startup.defaultReady();
+                    console.log('MathJax fully loaded and ready');
+                    this.renderInitialMath();
+                }
+            }
+        };
+
+        // Load MathJax script
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+        script.async = true;
+        document.head.appendChild(script);
+    }
+
+    renderInitialMath() {
+        // Render any existing math symbols in the toolbar
+        if (window.MathJax && window.MathJax.typesetPromise) {
+            const toolbar = document.querySelector('.math-toolbar');
+            if (toolbar) {
+                MathJax.typesetPromise([toolbar]).then(() => {
+                    console.log('Toolbar math symbols rendered');
+                });
+            }
         }
     }
 
@@ -55,37 +109,21 @@ class MathEditor {
         });
 
         // Track cursor position
-        this.input.addEventListener('selectionchange', () => {
-            this.cursorPosition = this.input.selectionStart;
-        });
-
-        this.input.addEventListener('click', () => {
-            this.cursorPosition = this.input.selectionStart;
-        });
-
-        this.input.addEventListener('keyup', () => {
-            this.cursorPosition = this.input.selectionStart;
+        ['click', 'keyup', 'selectionchange'].forEach(event => {
+            this.input.addEventListener(event, () => {
+                this.cursorPosition = this.input.selectionStart;
+            });
         });
 
         // Keyboard shortcuts
         this.input.addEventListener('keydown', (e) => {
             this.handleKeyboardShortcuts(e);
         });
+
+        console.log('Math editor event listeners set up');
     }
 
     handleKeyboardShortcuts(e) {
-        // Ctrl/Cmd + B for bold math
-        if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-            e.preventDefault();
-            this.insertMath('\\mathbf{}');
-        }
-        
-        // Ctrl/Cmd + I for italic math
-        if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
-            e.preventDefault();
-            this.insertMath('\\mathit{}');
-        }
-        
         // Ctrl/Cmd + F for fraction
         if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
             e.preventDefault();
@@ -96,6 +134,12 @@ class MathEditor {
         if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
             e.preventDefault();
             this.insertMath('\\sqrt{}');
+        }
+        
+        // Ctrl/Cmd + I for integral
+        if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+            e.preventDefault();
+            this.insertMath('\\int_{}^{}');
         }
     }
 
@@ -116,9 +160,9 @@ class MathEditor {
     updatePreview() {
         if (!this.preview || !this.input) return;
 
-        const latex = this.input.value;
+        const latex = this.input.value.trim();
         
-        if (latex.trim() === '') {
+        if (latex === '') {
             this.preview.innerHTML = `
                 <div class="text-center text-muted">
                     <i class="fas fa-eye fa-2x mb-2"></i>
@@ -133,7 +177,7 @@ class MathEditor {
 
         // Re-render MathJax
         if (window.MathJax && window.MathJax.typesetPromise) {
-            window.MathJax.typesetPromise([this.preview]).catch((err) => {
+            MathJax.typesetPromise([this.preview]).catch((err) => {
                 console.log('MathJax error:', err);
                 this.preview.innerHTML = `
                     <div class="alert alert-warning">
@@ -146,13 +190,15 @@ class MathEditor {
     }
 
     insertMath(latex) {
-        if (!this.input) return;
+        if (!this.input) {
+            console.warn('Math input not available');
+            return;
+        }
 
         const start = this.input.selectionStart;
         const end = this.input.selectionEnd;
         const text = this.input.value;
         
-        // Find cursor position within braces
         const beforeCursor = text.substring(0, start);
         const afterCursor = text.substring(end);
         
@@ -195,9 +241,7 @@ class MathEditor {
         const templates = {
             quadratic: '\\[ x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} \\]',
             taylor: '\\[ f(x) = \\sum_{n=0}^{\\infty} \\frac{f^{(n)}(a)}{n!}(x-a)^n \\]',
-            fourier: '\\[ \\mathcal{F}\\{f(t)\\} = \\int_{-\\infty}^{\\infty} f(t) e^{-2\\pi i \\xi t} dt \\]',
-            binomial: '\\[ (x + y)^n = \\sum_{k=0}^{n} \\binom{n}{k} x^{n-k} y^k \\]',
-            definite_integral: '\\[ \\int_a^b f(x) \\, dx = F(b) - F(a) \\]'
+            binomial: '\\[ (x + y)^n = \\sum_{k=0}^{n} \\binom{n}{k} x^{n-k} y^k \\]'
         };
 
         if (templates[templateName]) {
@@ -218,7 +262,6 @@ class MathEditor {
         if (!this.input) return;
 
         navigator.clipboard.writeText(this.input.value).then(() => {
-            // Show success notification
             this.showNotification('LaTeX copied to clipboard!', 'success');
         }).catch(err => {
             console.error('Failed to copy: ', err);
@@ -231,19 +274,20 @@ class MathEditor {
 
         const latex = this.input.value;
         
-        // Find active text editor (could be TinyMCE, CodeMirror, or plain textarea)
+        // Try to find any active text editor
         const editors = [
-            document.querySelector('.blog-editor textarea'),
-            document.querySelector('.content-editor'),
             document.querySelector('#post-content'),
-            document.querySelector('#problem-text')
+            document.querySelector('#problem-text'),
+            document.querySelector('.content-editor'),
+            document.querySelector('textarea[name="content"]')
         ];
 
+        let inserted = false;
         for (let editor of editors) {
-            if (editor && editor.offsetParent !== null) { // Check if visible
+            if (editor && editor.offsetParent !== null) {
                 if (editor.tagName === 'TEXTAREA') {
-                    const start = editor.selectionStart;
-                    const end = editor.selectionEnd;
+                    const start = editor.selectionStart || 0;
+                    const end = editor.selectionEnd || 0;
                     const text = editor.value;
                     
                     editor.value = text.substring(0, start) + latex + text.substring(end);
@@ -256,12 +300,15 @@ class MathEditor {
                     const modal = bootstrap.Modal.getInstance(document.getElementById('mathEditorModal'));
                     if (modal) modal.hide();
                     
-                    return;
+                    inserted = true;
+                    break;
                 }
             }
         }
         
-        this.showNotification('No active editor found', 'warning');
+        if (!inserted) {
+            this.showNotification('No active editor found', 'warning');
+        }
     }
 
     showNotification(message, type = 'info') {
@@ -271,7 +318,7 @@ class MathEditor {
         notification.style.cssText = `
             top: 20px;
             right: 20px;
-            z-index: 9999;
+            z-index: 10000;
             min-width: 300px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         `;
@@ -283,7 +330,6 @@ class MathEditor {
         
         document.body.appendChild(notification);
         
-        // Auto remove after 3 seconds
         setTimeout(() => {
             if (notification.parentElement) {
                 notification.remove();
@@ -294,38 +340,62 @@ class MathEditor {
 
 // Global functions for button onclick events
 function insertMath(latex) {
-    window.mathEditor.insertMath(latex);
+    if (window.mathEditor) {
+        window.mathEditor.insertMath(latex);
+    } else {
+        console.warn('Math editor not initialized');
+    }
 }
 
 function insertMatrix(rows, cols) {
-    window.mathEditor.insertMatrix(rows, cols);
+    if (window.mathEditor) {
+        window.mathEditor.insertMatrix(rows, cols);
+    }
 }
 
 function insertVector() {
-    window.mathEditor.insertVector();
+    if (window.mathEditor) {
+        window.mathEditor.insertVector();
+    }
 }
 
 function insertTemplate(templateName) {
-    window.mathEditor.insertTemplate(templateName);
+    if (window.mathEditor) {
+        window.mathEditor.insertTemplate(templateName);
+    }
 }
 
 function clearInput() {
-    window.mathEditor.clearInput();
+    if (window.mathEditor) {
+        window.mathEditor.clearInput();
+    }
 }
 
 function copyToClipboard() {
-    window.mathEditor.copyToClipboard();
+    if (window.mathEditor) {
+        window.mathEditor.copyToClipboard();
+    }
 }
 
 function insertIntoPost() {
-    window.mathEditor.insertIntoPost();
+    if (window.mathEditor) {
+        window.mathEditor.insertIntoPost();
+    }
 }
-
-// Initialize math editor
-window.mathEditor = new MathEditor();
 
 // Function to open math editor modal
 function openMathEditor() {
-    const modal = new bootstrap.Modal(document.getElementById('mathEditorModal'));
-    modal.show();
+    console.log('Opening math editor...');
+    const modal = document.getElementById('mathEditorModal');
+    if (modal) {
+        const bsModal = new bootstrap.Modal(modal);
+        bsModal.show();
+    } else {
+        console.error('Math editor modal not found');
+        alert('Math editor not available. Please check the page setup.');
+    }
 }
+
+// Initialize math editor when the script loads
+console.log('Math editor script loaded');
+window.mathEditor = new MathEditor();

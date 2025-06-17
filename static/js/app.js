@@ -398,3 +398,325 @@ function copyCode(elementId) {
         window.learningHub?.copyToClipboard(code.textContent);
     }
 }
+
+
+// static/js/app.js - Final JavaScript enhancements
+// Enhanced LearningHub class with recipe functionality
+class LearningHub {
+    constructor() {
+        this.currentField = null;
+        this.theme = localStorage.getItem('hub-theme') || 'light';
+        this.notifications = [];
+        this.init();
+    }
+
+    init() {
+        this.initTheme();
+        this.initNavigation();
+        this.initAnimations();
+        this.initSearchFunctionality();
+        this.initProgressTracking();
+        this.initMathEditor();
+        this.initRecipeFeatures();
+        this.bindEvents();
+    }
+
+    // Recipe-specific functionality
+    initRecipeFeatures() {
+        this.initRecipeRating();
+        this.initMealPlanning();
+        this.initNutritionCalculator();
+    }
+
+    initRecipeRating() {
+        document.querySelectorAll('.recipe-rating').forEach(rating => {
+            const stars = rating.querySelectorAll('.fa-star');
+            const recipeId = rating.closest('[data-recipe-id]')?.dataset.recipeId;
+            
+            if (stars.length && recipeId) {
+                stars.forEach((star, index) => {
+                    star.addEventListener('click', () => {
+                        this.rateRecipe(recipeId, index + 1);
+                    });
+                    
+                    star.addEventListener('mouseenter', () => {
+                        this.highlightStars(stars, index + 1);
+                    });
+                });
+                
+                rating.addEventListener('mouseleave', () => {
+                    this.resetStars(stars, rating.dataset.currentRating || 0);
+                });
+            }
+        });
+    }
+
+    rateRecipe(recipeId, rating) {
+        fetch(`/recipes/api/recipes/${recipeId}/rate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ rating: rating })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.updateRecipeRating(recipeId, data.new_rating, data.rating_count);
+                this.showNotification('Rating saved!', 'success', 2000);
+            } else {
+                this.showNotification('Failed to save rating', 'error', 3000);
+            }
+        })
+        .catch(error => {
+            console.error('Error rating recipe:', error);
+            this.showNotification('Failed to save rating', 'error', 3000);
+        });
+    }
+
+    highlightStars(stars, rating) {
+        stars.forEach((star, index) => {
+            if (index < rating) {
+                star.classList.remove('text-muted');
+                star.classList.add('text-warning');
+            } else {
+                star.classList.remove('text-warning');
+                star.classList.add('text-muted');
+            }
+        });
+    }
+
+    resetStars(stars, currentRating) {
+        stars.forEach((star, index) => {
+            if (index < currentRating) {
+                star.classList.remove('text-muted');
+                star.classList.add('text-warning');
+            } else {
+                star.classList.remove('text-warning');
+                star.classList.add('text-muted');
+            }
+        });
+    }
+
+    updateRecipeRating(recipeId, newRating, ratingCount) {
+        const ratingElement = document.querySelector(`[data-recipe-id="${recipeId}"] .recipe-rating`);
+        if (ratingElement) {
+            const stars = ratingElement.querySelectorAll('.fa-star');
+            this.resetStars(stars, newRating);
+            
+            const countElement = ratingElement.querySelector('.rating-count');
+            if (countElement) {
+                countElement.textContent = `(${ratingCount})`;
+            }
+            
+            ratingElement.dataset.currentRating = newRating;
+        }
+    }
+
+    initMealPlanning() {
+        // Weekly meal plan generation
+        const generatePlanBtn = document.getElementById('generate-meal-plan');
+        if (generatePlanBtn) {
+            generatePlanBtn.addEventListener('click', () => {
+                this.generateWeeklyMealPlan();
+            });
+        }
+    }
+
+    generateWeeklyMealPlan() {
+        const preferences = {
+            include_breakfast: document.getElementById('include-breakfast')?.checked ?? true,
+            include_lunch: document.getElementById('include-lunch')?.checked ?? true,
+            include_dinner: document.getElementById('include-dinner')?.checked ?? true,
+        };
+
+        this.showButtonLoading(document.getElementById('generate-meal-plan'));
+
+        fetch('/recipes/api/weekly-meal-plan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(preferences)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                this.displayMealPlan(data.meal_plan);
+                this.showNotification('Meal plan generated!', 'success', 3000);
+            }
+        })
+        .catch(error => {
+            console.error('Error generating meal plan:', error);
+            this.showNotification('Failed to generate meal plan', 'error', 3000);
+        })
+        .finally(() => {
+            this.hideButtonLoading(document.getElementById('generate-meal-plan'));
+        });
+    }
+
+    displayMealPlan(mealPlan) {
+        const mealPlanContainer = document.getElementById('meal-plan-container');
+        if (!mealPlanContainer) return;
+
+        let html = '<div class="row g-3">';
+        
+        Object.keys(mealPlan).forEach(day => {
+            const dayPlan = mealPlan[day];
+            html += `
+                <div class="col-lg-4 mb-3">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">${day.charAt(0).toUpperCase() + day.slice(1)}</h6>
+                        </div>
+                        <div class="card-body">
+            `;
+            
+            Object.keys(dayPlan).forEach(mealType => {
+                const meal = dayPlan[mealType];
+                html += `
+                    <div class="meal-item mb-2">
+                        <strong>${mealType.charAt(0).toUpperCase() + mealType.slice(1)}:</strong><br>
+                        <small>${meal.title}</small>
+                        ${meal.prep_time ? `<br><small class="text-muted">${meal.prep_time}min</small>` : ''}
+                    </div>
+                `;
+            });
+            
+            html += '</div></div></div>';
+        });
+        
+        html += '</div>';
+        mealPlanContainer.innerHTML = html;
+    }
+
+    initNutritionCalculator() {
+        // Nutrition calculation functionality
+        const calcBtn = document.getElementById('calculate-nutrition');
+        if (calcBtn) {
+            calcBtn.addEventListener('click', () => {
+                this.calculateNutrition();
+            });
+        }
+    }
+
+    // Math Editor Integration
+    initMathEditor() {
+        // Initialize MathJax if not already loaded
+        if (!window.MathJax) {
+            this.loadMathJax();
+        }
+    }
+
+    loadMathJax() {
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+        script.async = true;
+        
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']],
+                processEscapes: true,
+                processEnvironments: true
+            },
+            options: {
+                ignoreHtmlClass: 'tex2jax_ignore',
+                processHtmlClass: 'tex2jax_process'
+            },
+            startup: {
+                ready() {
+                    MathJax.startup.defaultReady();
+                    console.log('MathJax loaded successfully');
+                }
+            }
+        };
+        
+        document.head.appendChild(script);
+    }
+
+    // Enhanced notification system
+    showNotification(message, type = 'info', duration = 3000) {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-dismissible notification`;
+        
+        notification.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="fas fa-${this.getNotificationIcon(type)} me-2"></i>
+                <span>${message}</span>
+            </div>
+            <button type="button" class="btn-close" onclick="this.parentElement.remove()"></button>
+        `;
+        
+        document.body.appendChild(notification);
+        this.notifications.push(notification);
+        
+        // Auto-remove
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    notification.remove();
+                    this.notifications = this.notifications.filter(n => n !== notification);
+                }, 300);
+            }
+        }, duration);
+    }
+
+    getNotificationIcon(type) {
+        const icons = {
+            success: 'check-circle',
+            error: 'exclamation-triangle',
+            warning: 'exclamation-circle',
+            info: 'info-circle'
+        };
+        return icons[type] || 'info-circle';
+    }
+
+    // Enhanced button loading states
+    showButtonLoading(button) {
+        if (!button) return;
+        
+        button.dataset.originalText = button.innerHTML;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Loading...';
+        button.disabled = true;
+    }
+
+    hideButtonLoading(button) {
+        if (!button) return;
+        
+        button.innerHTML = button.dataset.originalText || button.innerHTML;
+        button.disabled = false;
+    }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    window.learningHub = new LearningHub();
+    
+    // Initialize math rendering on existing content
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise().then(() => {
+            console.log('Initial math rendering complete');
+        });
+    }
+});
+
+// Global functions for templates
+function openMathEditor() {
+    const modal = new bootstrap.Modal(document.getElementById('mathEditorModal'));
+    modal.show();
+}
+
+function addRecipe() {
+    window.location.href = '/recipes/create';
+}
+
+function createMathPost() {
+    window.location.href = '/mathematics/blog/create';
+}
+
+function addProblem() {
+    window.location.href = '/mathematics/problems/create';
+}

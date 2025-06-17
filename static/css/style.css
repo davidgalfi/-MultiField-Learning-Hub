@@ -358,3 +358,243 @@ body {
     background: linear-gradient(white, white) padding-box,
                 linear-gradient(45deg, var(--primary), var(--info)) border-box;
 }
+
+
+/* Recipe Theme Styles */
+.bg-gradient-recipe {
+    background: linear-gradient(135deg, var(--recipe-primary) 0%, var(--recipe-secondary) 100%) !important;
+}
+
+.recipe-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.recipe-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.recipe-rating .fas.fa-star {
+    font-size: 0.8rem;
+    margin: 0 1px;
+}
+
+.recipe-meta {
+    border-top: 1px solid #eee;
+    padding-top: 0.5rem;
+}
+
+.cooking-tip {
+    padding: 1rem;
+    border-left: 4px solid var(--recipe-primary);
+    background: rgba(139, 195, 74, 0.05);
+    border-radius: 0 8px 8px 0;
+}
+
+.day-card {
+    background: #f8f9fa;
+    transition: all 0.2s ease;
+    min-height: 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.day-card:hover {
+    background: var(--recipe-primary);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Math Editor Enhancements */
+.math-input {
+    font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+.math-input:focus {
+    border-color: var(--math-primary);
+    background: white;
+    box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.15);
+}
+
+.math-preview-area {
+    min-height: 450px;
+    max-height: 450px;
+    overflow-y: auto;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 16px;
+    line-height: 1.8;
+}
+
+.math-toolbar {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 2px solid #dee2e6;
+}
+
+.math-toolbar .btn {
+    border-radius: 6px;
+    margin: 0 2px;
+    transition: all 0.2s ease;
+    border: 1px solid #ced4da;
+}
+
+.math-toolbar .btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    background-color: var(--math-primary);
+    border-color: var(--math-primary);
+    color: white;
+}
+
+.math-symbol {
+    font-size: 13px;
+    display: inline-block;
+    min-width: 18px;
+}
+
+/* Field Navigation Enhancements */
+.field-header {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--info) 100%);
+    margin: -76px 0 0 0;
+    padding-top: 100px;
+    position: relative;
+    overflow: hidden;
+}
+
+.field-bg-animation {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(-45deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+    background-size: 400% 400%;
+    animation: gradient 15s ease infinite;
+}
+
+/* Global Animation Improvements */
+@keyframes gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Notification Enhancements */
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    min-width: 300px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .field-icon-large {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .display-5 {
+        font-size: 2rem;
+    }
+    
+    .math-toolbar .btn-group {
+        flex-wrap: wrap;
+    }
+    
+    .math-toolbar .btn {
+        margin-bottom: 5px;
+        font-size: 0.75rem;
+    }
+    
+    .modal-xl {
+        max-width: 95vw;
+        margin: 10px auto;
+    }
+    
+    .math-editor-container {
+        height: 70vh;
+    }
+    
+    .recipe-card .card-body {
+        padding: 1rem;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .navbar, .modal, .btn, footer {
+        display: none !important;
+    }
+    
+    .main-content {
+        padding-top: 0 !important;
+    }
+    
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+    }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .card {
+        border: 2px solid #000 !important;
+    }
+    
+    .btn {
+        border: 2px solid !important;
+    }
+    
+    .badge {
+        border: 1px solid #000;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
