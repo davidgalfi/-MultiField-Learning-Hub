@@ -1,0 +1,210 @@
+{% extends "field_base.html" %}
+
+{% block title %}Mathematical Formulas - Learning Hub{% endblock %}
+
+{% block field_content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-function me-2"></i>Mathematical Formulas Reference</h2>
+        <p class="text-muted">Essential mathematical formulas organized by category</p>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="row mb-4">
+    <div class="col">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control" id="formula-search" 
+                               placeholder="Search formulas by name or description...">
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" id="category-filter">
+                            <option value="all">All Categories</option>
+                            {% for category in formulas.keys() %}
+                            <option value="{{ category }}">{{ category.title() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Formulas by Category -->
+{% for category, formula_list in formulas.items() %}
+<div class="category-section mb-5" data-category="{{ category }}">
+    <div class="row mb-3">
+        <div class="col">
+            <h3 class="h4 text-primary">
+                <i class="fas fa-{{ 'calculator' if category == 'algebra' else 
+                              'chart-line' if category == 'calculus' else 
+                              'shapes' if category == 'geometry' else 
+                              'wave-square' }} me-2"></i>
+                {{ category.title() }}
+            </h3>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        {% for formula in formula_list %}
+        <div class="col-lg-6 formula-card" data-name="{{ formula.name.lower() }}" data-description="{{ formula.description.lower() }}">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0">{{ formula.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Formula Display -->
+                    <div class="formula-display text-center p-3 mb-3 bg-light rounded">
+                        <div class="math-formula">
+                            \[ {{ formula.formula }} \]
+                        </div>
+                    </div>
+                    
+                    <!-- Description -->
+                    <p class="card-text">{{ formula.description }}</p>
+                    
+                    <!-- Actions -->
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-primary" onclick="copyFormula('{{ formula.formula }}')">
+                            <i class="fas fa-copy me-1"></i>Copy LaTeX
+                        </button>
+                        <button class="btn btn-sm btn-outline-success" onclick="openMathEditor('{{ formula.formula }}')">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endfor %}
+
+<!-- No Results Message -->
+<div id="no-results" class="text-center py-5" style="display: none;">
+    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+    <h4>No formulas found</h4>
+    <p class="text-muted">Try adjusting your search terms or category filter</p>
+</div>
+
+<!-- Include Math Editor Modal -->
+{% include 'math_editor.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Search and filter functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('formula-search');
+    const categoryFilter = document.getElementById('category-filter');
+    const formulaCards = document.querySelectorAll('.formula-card');
+    const categorySections = document.querySelectorAll('.category-section');
+    const noResults = document.getElementById('no-results');
+
+    function filterFormulas() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedCategory = categoryFilter.value;
+        let visibleCount = 0;
+
+        // Filter category sections
+        categorySections.forEach(section => {
+            const category = section.dataset.category;
+            const shouldShowSection = selectedCategory === 'all' || selectedCategory === category;
+            section.style.display = shouldShowSection ? 'block' : 'none';
+            
+            if (shouldShowSection) {
+                // Filter cards within visible sections
+                const cards = section.querySelectorAll('.formula-card');
+                let sectionVisibleCount = 0;
+                
+                cards.forEach(card => {
+                    const name = card.dataset.name;
+                    const description = card.dataset.description;
+                    const matchesSearch = name.includes(searchTerm) || description.includes(searchTerm);
+                    
+                    if (matchesSearch) {
+                        card.style.display = 'block';
+                        sectionVisibleCount++;
+                        visibleCount++;
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+                
+                // Hide section if no cards are visible
+                if (sectionVisibleCount === 0 && searchTerm) {
+                    section.style.display = 'none';
+                }
+            }
+        });
+
+        // Show/hide no results message
+        noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
+
+    searchInput.addEventListener('input', filterFormulas);
+    categoryFilter.addEventListener('change', filterFormulas);
+});
+
+// Copy formula to clipboard
+function copyFormula(formula) {
+    navigator.clipboard.writeText(formula).then(() => {
+        // Show success notification
+        showNotification('Formula copied to clipboard!', 'success');
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+        showNotification('Failed to copy formula', 'error');
+    });
+}
+
+// Open math editor with pre-filled formula
+function openMathEditor(formula = '') {
+    const modal = new bootstrap.Modal(document.getElementById('mathEditorModal'));
+    modal.show();
+    
+    // Pre-fill with formula if provided
+    if (formula) {
+        setTimeout(() => {
+            const mathInput = document.getElementById('mathInput');
+            if (mathInput) {
+                mathInput.value = '\\[ ' + formula + ' \\]';
+                if (window.mathEditor) {
+                    window.mathEditor.updateCharCount();
+                    window.mathEditor.debouncePreview();
+                }
+            }
+        }, 100);
+    }
+}
+
+// Notification function
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    notification.style.cssText = `
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 3000);
+}
+</script>
+{% endblock %}

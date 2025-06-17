@@ -1,9 +1,10 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
-from models import MathProblem, BlogPost, db
+from database import db  # Import from database.py
+from models import MathProblem, BlogPost  # Import models directly
 import json
 from datetime import datetime
 
-math_bp = Blueprint('mathematics', __name__, template_folder='../templates/fields/mathematics')
+math_bp = Blueprint('mathematics', __name__, template_folder='templates')
 
 @math_bp.route('/')
 def index():
@@ -19,12 +20,16 @@ def index():
         'categories': get_math_categories(),
         'difficulty_distribution': get_difficulty_distribution()
     }
+
+    from app import FIELDS_CONFIG
+    field_info = FIELDS_CONFIG.get('mathematics', {})
     
     return render_template('mathematics/index.html', 
                          recent_problems=recent_problems,
                          recent_posts=recent_posts,
                          stats=stats,
-                         field_key='mathematics')
+                         field_key='mathematics',
+                         field_info=field_info)
 
 @math_bp.route('/problems')
 def problems():
@@ -102,6 +107,15 @@ def create_problem():
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 400
 
+@math_bp.route('/formulas')
+def formulas():
+    """Mathematical formulas reference"""
+    formulas_by_category = get_formulas_by_category()
+    
+    return render_template('mathematics/formulas.html',
+                         formulas=formulas_by_category,
+                         field_key='mathematics')
+
 @math_bp.route('/api/problems/<int:problem_id>/attempt', methods=['POST'])
 def attempt_problem(problem_id):
     """Record problem attempt"""
@@ -124,14 +138,6 @@ def attempt_problem(problem_id):
         'correct_attempts': problem.correct_attempts,
         'success_rate': round(success_rate, 1)
     })
-
-@math_bp.route('/formulas')
-def formulas():
-    """Mathematical formulas reference"""
-    formulas_by_category = get_formulas_by_category()
-    
-    return render_template('mathematics/formulas.html',
-                         formulas=formulas_by_category)
 
 def get_math_categories():
     """Get available math categories"""
@@ -161,6 +167,11 @@ def get_formulas_by_category():
                 'name': 'Binomial Theorem',
                 'formula': r'(a + b)^n = \sum_{k=0}^{n} \binom{n}{k} a^{n-k} b^k',
                 'description': 'Expansion of binomial expressions'
+            },
+            {
+                'name': 'Difference of Squares',
+                'formula': r'a^2 - b^2 = (a + b)(a - b)',
+                'description': 'Factorization of difference of squares'
             }
         ],
         'calculus': [
@@ -173,6 +184,11 @@ def get_formulas_by_category():
                 'name': 'Integration by Parts',
                 'formula': r'\int u \, dv = uv - \int v \, du',
                 'description': 'Method for integrating products of functions'
+            },
+            {
+                'name': 'Fundamental Theorem of Calculus',
+                'formula': r'\int_a^b f(x) \, dx = F(b) - F(a)',
+                'description': 'Relationship between differentiation and integration'
             }
         ],
         'geometry': [
@@ -185,6 +201,28 @@ def get_formulas_by_category():
                 'name': 'Pythagorean Theorem',
                 'formula': r'a^2 + b^2 = c^2',
                 'description': 'Relationship between sides of a right triangle'
+            },
+            {
+                'name': 'Distance Formula',
+                'formula': r'd = \sqrt{(x_2 - x_1)^2 + (y_2 - y_1)^2}',
+                'description': 'Distance between two points in 2D space'
+            }
+        ],
+        'trigonometry': [
+            {
+                'name': 'Sine Rule',
+                'formula': r'\frac{a}{\sin A} = \frac{b}{\sin B} = \frac{c}{\sin C}',
+                'description': 'Relationship between sides and angles in triangles'
+            },
+            {
+                'name': 'Cosine Rule',
+                'formula': r'c^2 = a^2 + b^2 - 2ab\cos C',
+                'description': 'Generalization of Pythagorean theorem'
+            },
+            {
+                'name': 'Euler\'s Formula',
+                'formula': r'e^{i\theta} = \cos\theta + i\sin\theta',
+                'description': 'Connection between trigonometry and complex exponentials'
             }
         ]
     }

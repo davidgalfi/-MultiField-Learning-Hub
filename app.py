@@ -1,32 +1,22 @@
+# app.py - Add context processor for global template variables
 from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+from database import db, migrate, init_db
 from datetime import datetime
 import os
 
+# Initialize Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-in-production'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///learning_hub.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
-migrate = Migrate(app, db)
+# Initialize database
+init_db(app)
 
-# Import blueprints
-from fields.mathematics import math_bp
-from fields.programming import programming_bp
-from fields.english import english_bp
-from fields.danish import danish_bp
-from fields.recipes import recipes_bp
+# Import models AFTER initializing db
+from models import *
 
-# Register blueprints with URL prefixes
-app.register_blueprint(math_bp, url_prefix='/mathematics')
-app.register_blueprint(programming_bp, url_prefix='/programming')
-app.register_blueprint(english_bp, url_prefix='/english')
-app.register_blueprint(danish_bp, url_prefix='/danish')
-app.register_blueprint(recipes_bp, url_prefix='/recipes')
-
-# Field configuration for easy expansion
+# Field configuration
 FIELDS_CONFIG = {
     'mathematics': {
         'name': 'Mathematics',
@@ -70,6 +60,31 @@ FIELDS_CONFIG = {
     }
 }
 
+# Make FIELDS_CONFIG available to all templates
+@app.context_processor
+def inject_fields_config():
+    return {'fields': FIELDS_CONFIG}
+
+# Now update mathematics blueprint to use global config
+def get_field_info(field_key):
+    """Get field info from global config"""
+    return FIELDS_CONFIG.get(field_key, {})
+
+# Register blueprints function
+def register_blueprints():
+    """Register all blueprints"""
+    from fields.mathematics import math_bp
+    from fields.programming import programming_bp
+    from fields.english import english_bp
+    from fields.danish import danish_bp
+    from fields.recipes import recipes_bp
+
+    app.register_blueprint(math_bp, url_prefix='/mathematics')
+    app.register_blueprint(programming_bp, url_prefix='/programming')
+    app.register_blueprint(english_bp, url_prefix='/english')
+    app.register_blueprint(danish_bp, url_prefix='/danish')
+    app.register_blueprint(recipes_bp, url_prefix='/recipes')
+
 @app.route('/')
 def home():
     """Dashboard/Home page with field overview"""
@@ -81,6 +96,9 @@ def api_fields():
     return jsonify(FIELDS_CONFIG)
 
 if __name__ == '__main__':
+    register_blueprints()
+    
     with app.app_context():
         db.create_all()
+    
     app.run(debug=True, host='0.0.0.0', port=5006)

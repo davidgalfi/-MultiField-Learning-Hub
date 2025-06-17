@@ -1,4 +1,5 @@
-from app import db
+# models.py - Database models (UPDATED)
+from database import db  # Import from database.py instead of app.py
 from datetime import datetime
 
 class BaseContent(db.Model):
