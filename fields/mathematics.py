@@ -1,6 +1,7 @@
+# fields/mathematics.py - Fixed with unique function names
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
-from database import db  # Import from database.py
-from models import MathProblem, BlogPost  # Import models directly
+from database import db
+from models import MathProblem, BlogPost
 import json
 from datetime import datetime
 
@@ -78,9 +79,23 @@ def problem_detail(problem_id):
                          problem=problem,
                          related_problems=related)
 
+@math_bp.route('/problems/create')
+def create_problem_form():
+    """Show create new math problem form with LaTeX editor"""
+    # Get field info for styling
+    from app import FIELDS_CONFIG
+    field_info = FIELDS_CONFIG.get('mathematics', {})
+    
+    categories = get_math_categories()
+    
+    return render_template('mathematics/create_problem.html',
+                         field_key='mathematics',
+                         field_info=field_info,
+                         categories=categories)
+
 @math_bp.route('/api/problems', methods=['POST'])
-def create_problem():
-    """Create new math problem"""
+def api_create_problem():
+    """API endpoint to create math problem"""
     data = request.get_json()
     
     try:
@@ -100,21 +115,12 @@ def create_problem():
         return jsonify({
             'success': True,
             'id': problem.id,
-            'message': 'Problem created successfully'
+            'message': 'Math problem created successfully'
         }), 201
         
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 400
-
-@math_bp.route('/formulas')
-def formulas():
-    """Mathematical formulas reference"""
-    formulas_by_category = get_formulas_by_category()
-    
-    return render_template('mathematics/formulas.html',
-                         formulas=formulas_by_category,
-                         field_key='mathematics')
 
 @math_bp.route('/api/problems/<int:problem_id>/attempt', methods=['POST'])
 def attempt_problem(problem_id):
@@ -139,6 +145,109 @@ def attempt_problem(problem_id):
         'success_rate': round(success_rate, 1)
     })
 
+@math_bp.route('/formulas')
+def formulas():
+    """Mathematical formulas reference"""
+    formulas_by_category = get_formulas_by_category()
+    
+    return render_template('mathematics/formulas.html',
+                         formulas=formulas_by_category,
+                         field_key='mathematics')
+
+# Blog Routes
+@math_bp.route('/blog')
+def blog_posts():
+    """List all math blog posts"""
+    page = request.args.get('page', 1, type=int)
+    per_page = 6
+    
+    posts = BlogPost.query.filter_by(field='mathematics').order_by(
+        BlogPost.created_at.desc()
+    ).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    
+    # Get field info
+    from app import FIELDS_CONFIG
+    field_info = FIELDS_CONFIG.get('mathematics', {})
+    
+    return render_template('mathematics/blog_posts.html',
+                         posts=posts,
+                         field_key='mathematics',
+                         field_info=field_info)
+
+@math_bp.route('/blog/create')
+def create_blog_post_form():
+    """Show create new math blog post form with LaTeX editor"""
+    # Get field info for styling
+    from app import FIELDS_CONFIG
+    field_info = FIELDS_CONFIG.get('mathematics', {})
+    
+    return render_template('mathematics/create_post.html',
+                         field_key='mathematics',
+                         field_info=field_info)
+
+@math_bp.route('/blog/<int:post_id>')
+def blog_post_detail(post_id):
+    """View specific blog post"""
+    post = BlogPost.query.get_or_404(post_id)
+    
+    # Increment views
+    post.views += 1
+    db.session.commit()
+    
+    # Get related posts
+    related = BlogPost.query.filter(
+        BlogPost.field == 'mathematics',
+        BlogPost.id != post.id
+    ).limit(3).all()
+    
+    # Get field info
+    from app import FIELDS_CONFIG
+    field_info = FIELDS_CONFIG.get('mathematics', {})
+    
+    return render_template('mathematics/blog_post_detail.html',
+                         post=post,
+                         related_posts=related,
+                         field_key='mathematics',
+                         field_info=field_info)
+
+# API Routes
+@math_bp.route('/api/blog/posts', methods=['POST'])
+def api_create_blog_post():
+    """API endpoint to create blog post"""
+    data = request.get_json()
+    
+    try:
+        # Calculate reading time (rough estimate: 200 words per minute)
+        word_count = len(data.get('content', '').split())
+        reading_time = max(1, round(word_count / 200))
+        
+        blog_post = BlogPost(
+            title=data['title'],
+            content=data['content'],
+            field='mathematics',
+            author=data.get('author', 'Admin'),
+            excerpt=data.get('excerpt', ''),
+            tags=data.get('tags', ''),
+            reading_time=reading_time,
+            featured_image=data.get('featured_image', '')
+        )
+        
+        db.session.add(blog_post)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'id': blog_post.id,
+            'message': 'Blog post created successfully'
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+# Utility Functions
 def get_math_categories():
     """Get available math categories"""
     return ['algebra', 'calculus', 'geometry', 'statistics', 'discrete', 'linear-algebra']

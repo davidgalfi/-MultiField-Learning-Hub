@@ -38,18 +38,18 @@
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <button class="btn btn-outline-success w-100 h-100 py-3" onclick="createMathPost()">
+                        <a href="{{ url_for('mathematics.create_blog_post_form') }}" class="btn btn-outline-success w-100 h-100 py-3 text-decoration-none">
                             <i class="fas fa-plus fa-2x mb-2 d-block"></i>
                             <strong>Create Math Post</strong>
                             <small class="d-block text-muted">Write with LaTeX editor</small>
-                        </button>
+                        </a>
                     </div>
                     <div class="col-md-3">
-                        <button class="btn btn-outline-info w-100 h-100 py-3" onclick="addProblem()">
+                        <a href="{{ url_for('mathematics.create_problem_form') }}" class="btn btn-outline-info w-100 h-100 py-3 text-decoration-none">
                             <i class="fas fa-brain fa-2x mb-2 d-block"></i>
                             <strong>Add Problem</strong>
                             <small class="d-block text-muted">Create math problems</small>
-                        </button>
+                        </a>
                     </div>
                     <div class="col-md-3">
                         <a href="{{ url_for('mathematics.formulas') }}" class="btn btn-outline-warning w-100 h-100 py-3 text-decoration-none">
@@ -198,4 +198,15 @@
         </div>
     </div>
 </div>
+
+<script>
+function createMathPost() {
+    window.location.href = '/mathematics/blog/create';
+}
+
+function addProblem() {
+    window.location.href = '/mathematics/problems/create';
+}
+</script>
+
 {% endblock %}

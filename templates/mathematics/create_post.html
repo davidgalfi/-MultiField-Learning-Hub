@@ -1,0 +1,309 @@
+{% extends "field_base.html" %}
+
+{% block title %}Create Math Post - Learning Hub{% endblock %}
+
+{% block field_content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header bg-gradient-math text-white">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-edit me-2"></i>Create Mathematics Blog Post
+                </h4>
+            </div>
+            <div class="card-body">
+                <form id="blog-post-form">
+                    <!-- Title -->
+                    <div class="mb-4">
+                        <label for="post-title" class="form-label fw-bold">
+                            <i class="fas fa-heading me-2"></i>Title *
+                        </label>
+                        <input type="text" class="form-control form-control-lg" id="post-title" 
+                               placeholder="Enter an engaging title for your math post..." required>
+                    </div>
+                    
+                    <!-- Author and Tags Row -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="post-author" class="form-label fw-bold">
+                                <i class="fas fa-user me-2"></i>Author
+                            </label>
+                            <input type="text" class="form-control" id="post-author" 
+                                   value="Admin" placeholder="Author name">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="post-tags" class="form-label fw-bold">
+                                <i class="fas fa-tags me-2"></i>Tags
+                            </label>
+                            <input type="text" class="form-control" id="post-tags" 
+                                   placeholder="algebra, calculus, geometry (comma separated)">
+                        </div>
+                    </div>
+                    
+                    <!-- Excerpt -->
+                    <div class="mb-4">
+                        <label for="post-excerpt" class="form-label fw-bold">
+                            <i class="fas fa-quote-left me-2"></i>Excerpt
+                        </label>
+                        <textarea class="form-control" id="post-excerpt" rows="3" 
+                                  placeholder="Brief description of your post..."></textarea>
+                    </div>
+                    
+                    <!-- Content Editor -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label for="post-content" class="form-label fw-bold mb-0">
+                                <i class="fas fa-file-alt me-2"></i>Content *
+                            </label>
+                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                    onclick="openMathEditor()">
+                                <i class="fas fa-calculator me-2"></i>Open Math Editor
+                            </button>
+                        </div>
+                        <textarea class="form-control content-editor" id="post-content" rows="15" 
+                                  placeholder="Write your mathematical content here. Use the Math Editor for complex equations..."></textarea>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Use the Math Editor to insert LaTeX equations. You can also type LaTeX directly using \( \) for inline math and \[ \] for display math.
+                        </div>
+                    </div>
+                    
+                    <!-- Featured Image URL -->
+                    <div class="mb-4">
+                        <label for="post-image" class="form-label fw-bold">
+                            <i class="fas fa-image me-2"></i>Featured Image URL (Optional)
+                        </label>
+                        <input type="url" class="form-control" id="post-image" 
+                               placeholder="https://example.com/image.jpg">
+                    </div>
+                    
+                    <!-- Preview Section -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0">
+                                <i class="fas fa-eye me-2"></i>Preview
+                            </h6>
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="updatePreview()">
+                                <i class="fas fa-sync-alt me-1"></i>Update Preview
+                            </button>
+                        </div>
+                        <div id="content-preview" class="border rounded p-3 bg-light" style="min-height: 200px;">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-eye fa-2x mb-2"></i>
+                                <p>Preview will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-save me-2"></i>Publish Post
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-lg" onclick="saveDraft()">
+                            <i class="fas fa-file-alt me-2"></i>Save Draft
+                        </button>
+                        <a href="{{ url_for('mathematics.blog_posts') }}" class="btn btn-outline-danger btn-lg">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Math Editor Modal -->
+{% include 'math_editor.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Blog post creation functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('blog-post-form');
+    const contentEditor = document.getElementById('post-content');
+    
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitBlogPost();
+    });
+    
+    // Auto-save draft every 2 minutes
+    setInterval(saveDraft, 120000);
+    
+    // Load saved draft on page load
+    loadDraft();
+});
+
+function submitBlogPost() {
+    const formData = {
+        title: document.getElementById('post-title').value,
+        content: document.getElementById('post-content').value,
+        author: document.getElementById('post-author').value,
+        excerpt: document.getElementById('post-excerpt').value,
+        tags: document.getElementById('post-tags').value,
+        featured_image: document.getElementById('post-image').value
+    };
+    
+    // Validate required fields
+    if (!formData.title || !formData.content) {
+        showNotification('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Publishing...';
+    submitBtn.disabled = true;
+    
+    fetch('/mathematics/api/blog/posts', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Blog post published successfully!', 'success');
+            // Clear draft
+            localStorage.removeItem('math-blog-draft');
+            // Redirect to blog posts list
+            setTimeout(() => {
+                window.location.href = '/mathematics/blog';
+            }, 2000);
+        } else {
+            showNotification('Error: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to publish blog post', 'error');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+function saveDraft() {
+    const draftData = {
+        title: document.getElementById('post-title').value,
+        content: document.getElementById('post-content').value,
+        author: document.getElementById('post-author').value,
+        excerpt: document.getElementById('post-excerpt').value,
+        tags: document.getElementById('post-tags').value,
+        featured_image: document.getElementById('post-image').value,
+        saved_at: new Date().toISOString()
+    };
+    
+    localStorage.setItem('math-blog-draft', JSON.stringify(draftData));
+    showNotification('Draft saved locally', 'info', 1500);
+}
+
+function loadDraft() {
+    const draftData = localStorage.getItem('math-blog-draft');
+    if (draftData) {
+        try {
+            const draft = JSON.parse(draftData);
+            
+            document.getElementById('post-title').value = draft.title || '';
+            document.getElementById('post-content').value = draft.content || '';
+            document.getElementById('post-author').value = draft.author || 'Admin';
+            document.getElementById('post-excerpt').value = draft.excerpt || '';
+            document.getElementById('post-tags').value = draft.tags || '';
+            document.getElementById('post-image').value = draft.featured_image || '';
+            
+            if (draft.title || draft.content) {
+                showNotification('Draft loaded from ' + new Date(draft.saved_at).toLocaleString(), 'info');
+            }
+        } catch (error) {
+            console.error('Error loading draft:', error);
+        }
+    }
+}
+
+function updatePreview() {
+    const content = document.getElementById('post-content').value;
+    const preview = document.getElementById('content-preview');
+    
+    if (content.trim() === '') {
+        preview.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-eye fa-2x mb-2"></i>
+                <p>Preview will appear here</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Render the content with MathJax
+    preview.innerHTML = content;
+    
+    // Re-render MathJax
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([preview]).then(() => {
+            console.log('Preview updated with MathJax rendering');
+        }).catch(err => {
+            console.error('MathJax rendering error in preview:', err);
+        });
+    }
+}
+
+function showNotification(message, type, duration = 3000) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible position-fixed`;
+    notification.style.cssText = `
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, duration);
+}
+
+// Enhanced math editor integration
+function insertIntoPost() {
+    if (window.mathEditor && window.mathEditor.input) {
+        const latex = window.mathEditor.input.value;
+        const contentEditor = document.getElementById('post-content');
+        
+        if (contentEditor && latex) {
+            const start = contentEditor.selectionStart;
+            const end = contentEditor.selectionEnd;
+            const text = contentEditor.value;
+            
+            contentEditor.value = text.substring(0, start) + latex + text.substring(end);
+            contentEditor.selectionStart = contentEditor.selectionEnd = start + latex.length;
+            contentEditor.focus();
+            
+            showNotification('LaTeX inserted into post!', 'success', 2000);
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('mathEditorModal'));
+            if (modal) modal.hide();
+            
+            // Update preview
+            updatePreview();
+        }
+    }
+}
+</script>
+{% endblock %}

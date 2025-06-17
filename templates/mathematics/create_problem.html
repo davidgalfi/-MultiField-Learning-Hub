@@ -1,0 +1,384 @@
+{% extends "field_base.html" %}
+
+{% block title %}Create Math Problem - Learning Hub{% endblock %}
+
+{% block field_content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header bg-gradient-math text-white">
+                <h4 class="card-title mb-0">
+                    <i class="fas fa-brain me-2"></i>Create Mathematics Problem
+                </h4>
+            </div>
+            <div class="card-body">
+                <form id="problem-form">
+                    <!-- Problem Title -->
+                    <div class="mb-4">
+                        <label for="problem-title" class="form-label fw-bold">
+                            <i class="fas fa-heading me-2"></i>Problem Title *
+                        </label>
+                        <input type="text" class="form-control form-control-lg" id="problem-title" 
+                               placeholder="e.g., Solve the Quadratic Equation" required>
+                    </div>
+                    
+                    <!-- Category and Difficulty -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="problem-category" class="form-label fw-bold">
+                                <i class="fas fa-folder me-2"></i>Category
+                            </label>
+                            <select class="form-select" id="problem-category">
+                                {% for category in categories %}
+                                <option value="{{ category }}">{{ category.title() }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="problem-difficulty" class="form-label fw-bold">
+                                <i class="fas fa-signal me-2"></i>Difficulty
+                            </label>
+                            <select class="form-select" id="problem-difficulty">
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Problem Statement -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label for="problem-text" class="form-label fw-bold mb-0">
+                                <i class="fas fa-question-circle me-2"></i>Problem Statement *
+                            </label>
+                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                    onclick="openMathEditorFor('problem-text')">
+                                <i class="fas fa-calculator me-2"></i>Math Editor
+                            </button>
+                        </div>
+                        <textarea class="form-control" id="problem-text" rows="6" 
+                                  placeholder="Describe the mathematical problem clearly. Use LaTeX for equations..." required></textarea>
+                    </div>
+                    
+                    <!-- Solution -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label for="problem-solution" class="form-label fw-bold mb-0">
+                                <i class="fas fa-check-circle me-2"></i>Solution *
+                            </label>
+                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                    onclick="openMathEditorFor('problem-solution')">
+                                <i class="fas fa-calculator me-2"></i>Math Editor
+                            </button>
+                        </div>
+                        <textarea class="form-control" id="problem-solution" rows="6" 
+                                  placeholder="Provide the complete solution..." required></textarea>
+                    </div>
+                    
+                    <!-- Explanation -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label for="problem-explanation" class="form-label fw-bold mb-0">
+                                <i class="fas fa-lightbulb me-2"></i>Step-by-Step Explanation
+                            </label>
+                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                    onclick="openMathEditorFor('problem-explanation')">
+                                <i class="fas fa-calculator me-2"></i>Math Editor
+                            </button>
+                        </div>
+                        <textarea class="form-control" id="problem-explanation" rows="8" 
+                                  placeholder="Explain the solution process step by step..."></textarea>
+                    </div>
+                    
+                    <!-- Formula Used -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label for="problem-formula" class="form-label fw-bold mb-0">
+                                <i class="fas fa-function me-2"></i>Key Formula(s) Used
+                            </label>
+                            <button type="button" class="btn btn-outline-primary btn-sm" 
+                                    onclick="openMathEditorFor('problem-formula')">
+                                <i class="fas fa-calculator me-2"></i>Math Editor
+                            </button>
+                        </div>
+                        <textarea class="form-control" id="problem-formula" rows="3" 
+                                  placeholder="List the main formulas used in this problem..."></textarea>
+                    </div>
+                    
+                    <!-- Preview Section -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0">
+                                <i class="fas fa-eye me-2"></i>Problem Preview
+                            </h6>
+                            <button type="button" class="btn btn-outline-info btn-sm" onclick="updateProblemPreview()">
+                                <i class="fas fa-sync-alt me-1"></i>Update Preview
+                            </button>
+                        </div>
+                        <div id="problem-preview" class="border rounded p-3 bg-light" style="min-height: 200px;">
+                            <div class="text-center text-muted">
+                                <i class="fas fa-eye fa-2x mb-2"></i>
+                                <p>Problem preview will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-save me-2"></i>Create Problem
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-lg" onclick="saveProblemDraft()">
+                            <i class="fas fa-file-alt me-2"></i>Save Draft
+                        </button>
+                        <a href="{{ url_for('mathematics.problems') }}" class="btn btn-outline-danger btn-lg">
+                            <i class="fas fa-times me-2"></i>Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Include Math Editor Modal -->
+{% include 'math_editor.html' %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentEditingField = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('problem-form');
+    
+    // Handle form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitProblem();
+    });
+    
+    // Auto-save draft every 2 minutes
+    setInterval(saveProblemDraft, 120000);
+    
+    // Load saved draft on page load
+    loadProblemDraft();
+});
+
+function openMathEditorFor(fieldId) {
+    currentEditingField = fieldId;
+    openMathEditor();
+}
+
+function submitProblem() {
+    const formData = {
+        title: document.getElementById('problem-title').value,
+        problem_text: document.getElementById('problem-text').value,
+        solution: document.getElementById('problem-solution').value,
+        explanation: document.getElementById('problem-explanation').value,
+        category: document.getElementById('problem-category').value,
+        difficulty: document.getElementById('problem-difficulty').value,
+        formula_used: document.getElementById('problem-formula').value
+    };
+    
+    // Validate required fields
+    if (!formData.title || !formData.problem_text || !formData.solution) {
+        showNotification('Please fill in all required fields', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating...';
+    submitBtn.disabled = true;
+    
+    fetch('/mathematics/api/problems', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Math problem created successfully!', 'success');
+            // Clear draft
+            localStorage.removeItem('math-problem-draft');
+            // Redirect to problems list
+            setTimeout(() => {
+                window.location.href = '/mathematics/problems';
+            }, 2000);
+        } else {
+            showNotification('Error: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to create problem', 'error');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+function saveProblemDraft() {
+    const draftData = {
+        title: document.getElementById('problem-title').value,
+        problem_text: document.getElementById('problem-text').value,
+        solution: document.getElementById('problem-solution').value,
+        explanation: document.getElementById('problem-explanation').value,
+        category: document.getElementById('problem-category').value,
+        difficulty: document.getElementById('problem-difficulty').value,
+        formula_used: document.getElementById('problem-formula').value,
+        saved_at: new Date().toISOString()
+    };
+    
+    localStorage.setItem('math-problem-draft', JSON.stringify(draftData));
+    showNotification('Draft saved locally', 'info', 1500);
+}
+
+function loadProblemDraft() {
+    const draftData = localStorage.getItem('math-problem-draft');
+    if (draftData) {
+        try {
+            const draft = JSON.parse(draftData);
+            
+            document.getElementById('problem-title').value = draft.title || '';
+            document.getElementById('problem-text').value = draft.problem_text || '';
+            document.getElementById('problem-solution').value = draft.solution || '';
+            document.getElementById('problem-explanation').value = draft.explanation || '';
+            document.getElementById('problem-category').value = draft.category || 'algebra';
+            document.getElementById('problem-difficulty').value = draft.difficulty || 'beginner';
+            document.getElementById('problem-formula').value = draft.formula_used || '';
+            
+            if (draft.title || draft.problem_text) {
+                showNotification('Draft loaded from ' + new Date(draft.saved_at).toLocaleString(), 'info');
+            }
+        } catch (error) {
+            console.error('Error loading draft:', error);
+        }
+    }
+}
+
+function updateProblemPreview() {
+    const title = document.getElementById('problem-title').value;
+    const problemText = document.getElementById('problem-text').value;
+    const solution = document.getElementById('problem-solution').value;
+    const explanation = document.getElementById('problem-explanation').value;
+    const category = document.getElementById('problem-category').value;
+    const difficulty = document.getElementById('problem-difficulty').value;
+    
+    const preview = document.getElementById('problem-preview');
+    
+    if (!title && !problemText) {
+        preview.innerHTML = `
+            <div class="text-center text-muted">
+                <i class="fas fa-eye fa-2x mb-2"></i>
+                <p>Problem preview will appear here</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const previewHTML = `
+        <div class="problem-preview">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h5 class="text-primary">${title || 'Problem Title'}</h5>
+                <div>
+                    <span class="badge bg-primary me-1">${category}</span>
+                    <span class="badge bg-secondary">${difficulty}</span>
+                </div>
+            </div>
+            
+            ${problemText ? `
+                <div class="mb-3">
+                    <h6 class="fw-bold text-success">Problem:</h6>
+                    <div class="problem-text">${problemText}</div>
+                </div>
+            ` : ''}
+            
+            ${solution ? `
+                <div class="mb-3">
+                    <h6 class="fw-bold text-info">Solution:</h6>
+                    <div class="solution-text">${solution}</div>
+                </div>
+            ` : ''}
+            
+            ${explanation ? `
+                <div class="mb-3">
+                    <h6 class="fw-bold text-warning">Explanation:</h6>
+                    <div class="explanation-text">${explanation}</div>
+                </div>
+            ` : ''}
+        </div>
+    `;
+    
+    preview.innerHTML = previewHTML;
+    
+    // Re-render MathJax
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([preview]).then(() => {
+            console.log('Problem preview updated with MathJax rendering');
+        }).catch(err => {
+            console.error('MathJax rendering error in preview:', err);
+        });
+    }
+}
+
+// Enhanced math editor integration for specific fields
+function insertIntoPost() {
+    if (window.mathEditor && window.mathEditor.input && currentEditingField) {
+        const latex = window.mathEditor.input.value;
+        const targetField = document.getElementById(currentEditingField);
+        
+        if (targetField && latex) {
+            const start = targetField.selectionStart;
+            const end = targetField.selectionEnd;
+            const text = targetField.value;
+            
+            targetField.value = text.substring(0, start) + latex + text.substring(end);
+            targetField.selectionStart = targetField.selectionEnd = start + latex.length;
+            targetField.focus();
+            
+            showNotification('LaTeX inserted!', 'success', 2000);
+            
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('mathEditorModal'));
+            if (modal) modal.hide();
+            
+            // Update preview
+            updateProblemPreview();
+        }
+    }
+}
+
+function showNotification(message, type, duration = 3000) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible position-fixed`;
+    notification.style.cssText = `
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    
+    notification.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, duration);
+}
+</script>
+{% endblock %}
