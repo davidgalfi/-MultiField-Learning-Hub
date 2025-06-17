@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - MultiField Learning Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Hero Section -->
+    <div class="hero-section text-center py-5 mb-5" data-aos="fade-up">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">
+                <span class="gradient-text">Welcome to Learning Hub</span>
+            </h1>
+            <p class="lead text-muted mb-4">
+                Your comprehensive platform for mastering multiple fields of knowledge
+            </p>
+            <div class="hero-stats d-flex justify-content-center gap-4 flex-wrap">
+                <div class="stat-item">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Learning Fields</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">∞</div>
+                    <div class="stat-label">Possibilities</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">Available</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Field Cards -->
+    <div class="row g-4 mb-5">
+        {% for field_key, field_info in fields.items() %}
+        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 100 }}">
+            <div class="field-card card h-100 shadow-lg border-0 {{ field_info.theme }}" 
+                 onclick="window.location.href='/{{ field_key }}/'">
+                <div class="card-header border-0 text-white position-relative overflow-hidden">
+                    <div class="field-bg-pattern"></div>
+                    <div class="position-relative">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="field-icon me-3">
+                                <i class="{{ field_info.icon }} fa-2x"></i>
+                            </div>
+                            <div>
+                                <h4 class="card-title mb-1">{{ field_info.name }}</h4>
+                                <small class="opacity-75">{{ field_info.description[:50] }}...</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-body">
+                    <p class="card-text text-muted mb-4">{{ field_info.description }}</p>
+                    
+                    <div class="features-list mb-4">
+                        {% for feature in field_info.features %}
+                        <div class="feature-item d-flex align-items-center mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            <small>{{ feature }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-transparent border-0">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary btn-sm flex-fill">
+                            <i class="fas fa-arrow-right me-1"></i>Explore
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="event.stopPropagation(); quickStart('{{ field_key }}')">
+                            <i class="fas fa-play me-1"></i>Quick Start
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row g-4 mb-5">
+        <div class="col-12" data-aos="fade-up">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-success w-100 h-100 py-3" onclick="createContent()">
+                                <i class="fas fa-plus fa-2x mb-2 d-block"></i>
+                                <strong>Create Content</strong>
+                                <small class="d-block text-muted">Add new posts or materials</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-info w-100 h-100 py-3" onclick="randomStudy()">
+                                <i class="fas fa-random fa-2x mb-2 d-block"></i>
+                                <strong>Random Study</strong>
+                                <small class="d-block text-muted">Surprise learning session</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-warning w-100 h-100 py-3" onclick="viewProgress()">
+                                <i class="fas fa-chart-line fa-2x mb-2 d-block"></i>
+                                <strong>View Progress</strong>
+                                <small class="d-block text-muted">Track your learning</small>
+                            </button>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-danger w-100 h-100 py-3" onclick="studyReminders()">
+                                <i class="fas fa-bell fa-2x mb-2 d-block"></i>
+                                <strong>Reminders</strong>
+                                <small class="d-block text-muted">Set study notifications</small>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="row g-4">
+        <div class="col-lg-8" data-aos="fade-right">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-clock me-2"></i>Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="activity-timeline">
+                        <!-- Activity items will be loaded via JavaScript -->
+                        <div class="activity-item d-flex align-items-center mb-3">
+                            <div class="activity-icon bg-success rounded-circle me-3">
+                                <i class="fas fa-plus text-white"></i>
+                            </div>
+                            <div class="activity-content flex-grow-1">
+                                <div class="fw-semibold">Welcome to Learning Hub!</div>
+                                <small class="text-muted">Start exploring your first field</small>
+                            </div>
+                            <small class="text-muted">Just now</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4" data-aos="fade-left">
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-target me-2"></i>Today's Goals
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="goals-list">
+                        <div class="goal-item d-flex align-items-center mb-3">
+                            <input type="checkbox" class="form-check-input me-2" id="goal1">
+                            <label for="goal1" class="form-check-label">
+                                Complete 5 flash cards
+                            </label>
+                        </div>
+                        <div class="goal-item d-flex align-items-center mb-3">
+                            <input type="checkbox" class="form-check-input me-2" id="goal2">
+                            <label for="goal2" class="form-check-label">
+                                Solve 1 math problem
+                            </label>
+                        </div>
+                        <div class="goal-item d-flex align-items-center mb-3">
+                            <input type="checkbox" class="form-check-input me-2" id="goal3">
+                            <label for="goal3" class="form-check-label">
+                                Try a new recipe
+                            </label>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-outline-primary w-100">
+                        <i class="fas fa-plus me-1"></i>Add Goal
+                    </button>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-lg">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>Daily Tip
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="tip-content">
+                        <p class="mb-3">
+                            <i class="fas fa-quote-left text-muted me-2"></i>
+                            Consistency is key to learning. Even 15 minutes daily can make a huge difference!
+                        </p>
+                        <button class="btn btn-sm btn-outline-info" onclick="getNewTip()">
+                            <i class="fas fa-sync-alt me-1"></i>New Tip
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Dashboard specific JavaScript
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize AOS animations
+    AOS.init({
+        duration: 800,
+        easing: 'ease-in-out',
+        once: true
+    });
+    
+    // Add hover effects to field cards
+    document.querySelectorAll('.field-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-10px)';
+            this.style.transition = 'transform 0.3s ease';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
+    });
+});
+
+function quickStart(fieldKey) {
+    // Implement quick start functionality
+    console.log(`Starting quick session for ${fieldKey}`);
+    // Redirect to field-specific quick start
+    window.location.href = `/${fieldKey}/quick-start`;
+}
+
+function createContent() {
+    // Show content creation modal
+    const modal = new bootstrap.Modal(document.getElementById('createContentModal'));
+    modal.show();
+}
+
+function randomStudy() {
+    // Implement random study session
+    const fields = Object.keys('{{ fields|tojson }}');
+    const randomField = fields[Math.floor(Math.random() * fields.length)];
+    window.location.href = `/${randomField}/random`;
+}
+
+function viewProgress() {
+    window.location.href = '/progress';
+}
+
+function studyReminders() {
+    window.location.href = '/reminders';
+}
+
+function getNewTip() {
+    // Fetch a new daily tip
+    const tips = [
+        "Use spaced repetition for better memory retention",
+        "Break complex problems into smaller, manageable parts",
+        "Practice coding problems daily to improve logical thinking",
+        "Read in your target language for 10 minutes daily",
+        "Try cooking one new healthy recipe each week"
+    ];
+    
+    const randomTip = tips[Math.floor(Math.random() * tips.length)];
+    document.querySelector('.tip-content p').innerHTML = 
+        `<i class="fas fa-quote-left text-muted me-2"></i>${randomTip}`;
+}
+</script>
+{% endblock %}
