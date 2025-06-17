@@ -305,6 +305,107 @@ def api_create_blog_post():
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 400
 
+
+# fields/mathematics.py - Add safe delete routes
+
+@math_bp.route('/blog/<int:post_id>/delete', methods=['POST'])
+def delete_blog_post(post_id):
+    """Safely delete a blog post"""
+    try:
+        post = BlogPost.query.get_or_404(post_id)
+        
+        # Store post info for confirmation message
+        post_title = post.title
+        
+        # Delete the post
+        db.session.delete(post)
+        db.session.commit()
+        
+        flash(f'Blog post "{post_title}" has been deleted successfully.', 'success')
+        return redirect(url_for('mathematics.blog_posts'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting blog post: {str(e)}', 'error')
+        return redirect(url_for('mathematics.blog_posts'))
+
+
+@math_bp.route('/api/blog/<int:post_id>/delete', methods=['DELETE'])
+def api_delete_blog_post(post_id):
+    """API endpoint for safe blog post deletion"""
+    try:
+        post = BlogPost.query.get_or_404(post_id)
+        post_title = post.title
+        
+        db.session.delete(post)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Blog post "{post_title}" deleted successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+# fields/mathematics.py - Add these delete routes
+
+@math_bp.route('/problems/<int:problem_id>/delete', methods=['POST'])
+def delete_problem_form(problem_id):
+    """Form-based problem deletion"""
+    try:
+        problem = MathProblem.query.get_or_404(problem_id)
+        
+        # Store problem info for confirmation message
+        problem_title = problem.title
+        problem_category = problem.category
+        
+        # Delete the problem
+        db.session.delete(problem)
+        db.session.commit()
+        
+        flash(f'Math problem "{problem_title}" has been deleted successfully.', 'success')
+        return redirect(url_for('mathematics.problems'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting problem: {str(e)}', 'error')
+        return redirect(url_for('mathematics.problems'))
+
+@math_bp.route('/api/problems/<int:problem_id>/delete', methods=['DELETE'])
+def api_delete_problem(problem_id):
+    """API endpoint for safe problem deletion"""
+    try:
+        problem = MathProblem.query.get_or_404(problem_id)
+        
+        # Get problem stats before deletion
+        problem_data = {
+            'title': problem.title,
+            'category': problem.category,
+            'attempts': problem.attempts or 0,
+            'correct_attempts': problem.correct_attempts or 0
+        }
+        
+        db.session.delete(problem)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Math problem "{problem_data["title"]}" deleted successfully',
+            'deleted_problem': problem_data
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 # Utility Functions
 def get_math_categories():
     """Get available math categories"""

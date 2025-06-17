@@ -1,4 +1,4 @@
-<!-- templates/mathematics/problems.html - Mathematics problems listing -->
+<!-- templates/mathematics/problems.html - Add delete functionality -->
 {% extends "field_base.html" %}
 
 {% block title %}Math Problems - Learning Hub{% endblock %}
@@ -16,7 +16,7 @@
     </div>
 </div>
 
-<!-- Search and Filter -->
+<!-- Search and Filter Section -->
 <div class="card mb-4">
     <div class="card-body">
         <form method="GET" class="row g-3">
@@ -60,7 +60,8 @@
 <div class="row g-4 mb-4">
     {% for problem in problems %}
     <div class="col-lg-6">
-        <div class="card problem-card h-100 shadow-sm border-0">
+        <div class="card problem-card h-100 shadow-sm border-0" data-problem-id="{{ problem.id }}">
+            <!-- Card Header -->
             <div class="card-header d-flex justify-content-between align-items-start">
                 <div>
                     <h5 class="card-title mb-1">{{ problem.title }}</h5>
@@ -69,7 +70,7 @@
                         {{ problem.created_at.strftime('%B %d, %Y') if problem.created_at else 'Recent' }}
                     </small>
                 </div>
-                <div class="text-end">
+                <div>
                     <span class="badge bg-primary me-1">{{ problem.category.title() }}</span>
                     <span class="badge bg-{{ 'success' if problem.difficulty == 'beginner' else 'warning' if problem.difficulty == 'intermediate' else 'danger' }}">
                         {{ problem.difficulty.title() }}
@@ -77,6 +78,7 @@
                 </div>
             </div>
             
+            <!-- Card Body -->
             <div class="card-body">
                 <!-- Problem Preview -->
                 <div class="problem-preview mb-3">
@@ -86,7 +88,7 @@
                     </div>
                 </div>
                 
-                <!-- Formula Used (if any) -->
+                <!-- Formula Used -->
                 {% if problem.formula_used %}
                 <div class="mb-3">
                     <h6 class="text-info">Key Formula:</h6>
@@ -99,52 +101,50 @@
                 <!-- Problem Stats -->
                 <div class="problem-stats row text-center">
                     <div class="col-4">
-                        <div class="stat-item">
-                            <span class="d-block h6 mb-1 text-primary">{{ problem.attempts or 0 }}</span>
-                            <small class="text-muted">Attempts</small>
-                        </div>
+                        <span class="d-block h6 mb-1 text-primary">{{ problem.attempts or 0 }}</span>
+                        <small class="text-muted">Attempts</small>
                     </div>
                     <div class="col-4">
-                        <div class="stat-item">
-                            <span class="d-block h6 mb-1 text-success">{{ problem.correct_attempts or 0 }}</span>
-                            <small class="text-muted">Solved</small>
-                        </div>
+                        <span class="d-block h6 mb-1 text-success">{{ problem.correct_attempts or 0 }}</span>
+                        <small class="text-muted">Solved</small>
                     </div>
                     <div class="col-4">
-                        <div class="stat-item">
-                            {% set success_rate = (problem.correct_attempts / problem.attempts * 100) if problem.attempts > 0 else 0 %}
-                            <span class="d-block h6 mb-1 text-warning">{{ "%.0f"|format(success_rate) }}%</span>
-                            <small class="text-muted">Success</small>
-                        </div>
+                        {% set success_rate = (problem.correct_attempts / problem.attempts * 100) if problem.attempts > 0 else 0 %}
+                        <span class="d-block h6 mb-1 text-warning">{{ "%.0f"|format(success_rate) }}%</span>
+                        <small class="text-muted">Success</small>
                     </div>
                 </div>
             </div>
             
+            <!-- Card Footer with Actions -->
             <div class="card-footer bg-transparent border-0">
                 <div class="d-flex gap-2">
                     <a href="{{ url_for('mathematics.problem_detail', problem_id=problem.id) }}" 
                        class="btn btn-primary btn-sm flex-fill">
                         <i class="fas fa-play me-1"></i>Solve Problem
                     </a>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="previewProblem(' {{ problem.id }} ')">
-                        <i class="fas fa-eye me-1"></i>Preview
-                    </button>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-info" onclick="previewProblem(' {{ problem.id }} ')" title="Preview">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <a href="#" class="btn btn-outline-primary" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn btn-outline-danger delete-problem-btn" 
+                                title="Delete Problem"
+                                data-problem-id="{{ problem.id }}"
+                                data-problem-title="{{ problem.title }}"
+                                data-problem-category="{{ problem.category }}"
+                                data-problem-attempts="{{ problem.attempts or 0 }}"
+                                data-problem-solved="{{ problem.correct_attempts or 0 }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     {% endfor %}
-</div>
-
-<!-- Pagination (if needed) -->
-<div class="d-flex justify-content-center">
-    <nav aria-label="Problems pagination">
-        <ul class="pagination">
-            <li class="page-item disabled">
-                <span class="page-link">Showing {{ problems|length }} problems</span>
-            </li>
-        </ul>
-    </nav>
 </div>
 
 {% else %}
@@ -166,6 +166,71 @@
     </a>
 </div>
 {% endif %}
+
+<!-- Delete Problem Modal -->
+<div class="modal fade" id="deleteProblemModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                    Confirm Delete Problem
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone.
+                </div>
+                
+                <p>Are you sure you want to delete this math problem?</p>
+                <div class="p-3 bg-light rounded mb-3">
+                    <h6 class="mb-2"><strong id="deleteProblemTitle"></strong></h6>
+                    <div class="d-flex justify-content-between text-muted small">
+                        <span>Category: <span id="deleteProblemCategory"></span></span>
+                        <span>Difficulty: <span id="deleteProblemDifficulty"></span></span>
+                    </div>
+                </div>
+                
+                <div class="row text-center mb-3">
+                    <div class="col-4">
+                        <span class="d-block h6 text-primary" id="deleteProblemAttempts">0</span>
+                        <small class="text-muted">Total Attempts</small>
+                    </div>
+                    <div class="col-4">
+                        <span class="d-block h6 text-success" id="deleteProblemSolved">0</span>
+                        <small class="text-muted">Times Solved</small>
+                    </div>
+                    <div class="col-4">
+                        <span class="d-block h6 text-info" id="deleteProblemSuccessRate">0%</span>
+                        <small class="text-muted">Success Rate</small>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <strong>This will permanently remove:</strong>
+                    </small>
+                    <ul class="small text-muted mt-2">
+                        <li>The complete problem statement and solution</li>
+                        <li>All attempt statistics and progress data</li>
+                        <li>Associated formulas and explanations</li>
+                        <li>Any user progress tracking for this problem</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteProblem">
+                    <i class="fas fa-trash me-2"></i>Delete Problem
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Problem Preview Modal -->
 <div class="modal fade" id="problemPreviewModal" tabindex="-1" aria-hidden="true">
@@ -191,8 +256,12 @@
 
 {% block extra_js %}
 <script>
-// Auto-submit search form with debounce
+let deleteProblemId = null;
+let deleteProblemData = null;
+
+// Initialize delete functionality
 document.addEventListener('DOMContentLoaded', function() {
+    // Search functionality
     const searchInput = document.getElementById('search');
     const categorySelect = document.getElementById('category');
     const difficultySelect = document.getElementById('difficulty');
@@ -219,12 +288,109 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Initialize delete functionality
+    document.querySelectorAll('.delete-problem-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const problemId = this.dataset.problemId;
+            const problemTitle = this.dataset.problemTitle;
+            const problemCategory = this.dataset.problemCategory;
+            const problemAttempts = parseInt(this.dataset.problemAttempts) || 0;
+            const problemSolved = parseInt(this.dataset.problemSolved) || 0;
+            
+            showDeleteProblemModal(problemId, {
+                title: problemTitle,
+                category: problemCategory,
+                attempts: problemAttempts,
+                solved: problemSolved
+            });
+        });
+    });
+
     // Render math content
     if (window.MathJax && window.MathJax.typesetPromise) {
         MathJax.typesetPromise().then(() => {
             console.log('Math content rendered in problems list');
         });
     }
+});
+
+function showDeleteProblemModal(problemId, problemData) {
+    deleteProblemId = problemId;
+    deleteProblemData = problemData;
+    
+    // Populate modal with problem data
+    document.getElementById('deleteProblemTitle').textContent = problemData.title;
+    document.getElementById('deleteProblemCategory').textContent = problemData.category;
+    document.getElementById('deleteProblemAttempts').textContent = problemData.attempts;
+    document.getElementById('deleteProblemSolved').textContent = problemData.solved;
+    
+    // Calculate and display success rate
+    const successRate = problemData.attempts > 0 
+        ? Math.round((problemData.solved / problemData.attempts) * 100) 
+        : 0;
+    document.getElementById('deleteProblemSuccessRate').textContent = successRate + '%';
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteProblemModal'));
+    modal.show();
+}
+
+document.getElementById('confirmDeleteProblem').addEventListener('click', function() {
+    if (!deleteProblemId) return;
+    
+    // Show loading state
+    const btn = this;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+    btn.disabled = true;
+    
+    // Delete via API
+    fetch(`/mathematics/api/problems/${deleteProblemId}/delete`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Close modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteProblemModal'));
+            modal.hide();
+            
+            // Remove the problem card from the page
+            const problemCard = document.querySelector(`[data-problem-id="${deleteProblemId}"]`);
+            if (problemCard) {
+                problemCard.style.transition = 'all 0.3s ease';
+                problemCard.style.opacity = '0';
+                problemCard.style.transform = 'scale(0.8)';
+                
+                setTimeout(() => {
+                    problemCard.remove();
+                    
+                    // Check if no problems remain
+                    const remainingProblems = document.querySelectorAll('.problem-card').length;
+                    if (remainingProblems === 0) {
+                        // Show "no problems" message or reload page
+                        window.location.reload();
+                    }
+                }, 300);
+            }
+            
+            // Show success message
+            showNotification(data.message, 'success');
+        } else {
+            showNotification('Error: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to delete problem', 'error');
+    })
+    .finally(() => {
+        // Reset button
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
 });
 
 // Problem preview functionality
@@ -244,63 +410,64 @@ function previewProblem(problemId) {
         });
 }
 
-// Replace the problematic section in templates/mathematics/problems.html
 function showProblemPreview(problem) {
     const previewContent = document.getElementById('problemPreviewContent');
     const solveProblemBtn = document.getElementById('solveProblemBtn');
     
-    // Helper function to get difficulty badge class
     function getDifficultyBadgeClass(difficulty) {
-        switch(difficulty) {
-            case 'beginner': return 'success';
-            case 'intermediate': return 'warning';
-            case 'advanced': return 'danger';
-            default: return 'secondary';
-        }
+        const classes = {
+            'beginner': 'success',
+            'intermediate': 'warning', 
+            'advanced': 'danger'
+        };
+        return classes[difficulty] || 'secondary';
     }
     
-    previewContent.innerHTML = `
-        <div class="problem-preview">
-            <div class="d-flex justify-content-between align-items-start mb-3">
-                <h5 class="text-primary">${problem.title}</h5>
-                <div>
-                    <span class="badge bg-primary me-1">${problem.category}</span>
-                    <span class="badge bg-${getDifficultyBadgeClass(problem.difficulty)}">${problem.difficulty}</span>
-                </div>
-            </div>
-            
-            <div class="mb-3">
-                <h6 class="fw-bold text-success">Problem:</h6>
-                <div class="problem-text">${problem.problem_text}</div>
-            </div>
-            
-            ${problem.formula_used ? `
-                <div class="mb-3">
-                    <h6 class="fw-bold text-info">Key Formula:</h6>
-                    <div class="formula-text bg-light p-2 rounded">${problem.formula_used}</div>
-                </div>
-            ` : ''}
-            
-            <div class="row text-center">
-                <div class="col-4">
-                    <span class="d-block h6 text-primary">${problem.attempts || 0}</span>
-                    <small class="text-muted">Total Attempts</small>
-                </div>
-                <div class="col-4">
-                    <span class="d-block h6 text-success">${problem.correct_attempts || 0}</span>
-                    <small class="text-muted">Correct Solutions</small>
-                </div>
-                <div class="col-4">
-                    <span class="d-block h6 text-warning">${problem.attempts > 0 ? Math.round(problem.correct_attempts / problem.attempts * 100) : 0}%</span>
-                    <small class="text-muted">Success Rate</small>
-                </div>
-            </div>
-        </div>
-    `;
+    const difficultyClass = getDifficultyBadgeClass(problem.difficulty);
+    const successRate = problem.attempts > 0 ? Math.round(problem.correct_attempts / problem.attempts * 100) : 0;
+    
+    let html = '<div class="problem-preview">';
+    html += '<div class="d-flex justify-content-between align-items-start mb-3">';
+    html += '<h5 class="text-primary">' + escapeHtml(problem.title) + '</h5>';
+    html += '<div>';
+    html += '<span class="badge bg-primary me-1">' + escapeHtml(problem.category) + '</span>';
+    html += '<span class="badge bg-' + difficultyClass + '">' + escapeHtml(problem.difficulty) + '</span>';
+    html += '</div>';
+    html += '</div>';
+    
+    html += '<div class="mb-3">';
+    html += '<h6 class="fw-bold text-success">Problem:</h6>';
+    html += '<div class="problem-text">' + problem.problem_text + '</div>';
+    html += '</div>';
+    
+    if (problem.formula_used) {
+        html += '<div class="mb-3">';
+        html += '<h6 class="fw-bold text-info">Key Formula:</h6>';
+        html += '<div class="formula-text bg-light p-2 rounded">' + problem.formula_used + '</div>';
+        html += '</div>';
+    }
+    
+    html += '<div class="row text-center">';
+    html += '<div class="col-4">';
+    html += '<span class="d-block h6 text-primary">' + (problem.attempts || 0) + '</span>';
+    html += '<small class="text-muted">Total Attempts</small>';
+    html += '</div>';
+    html += '<div class="col-4">';
+    html += '<span class="d-block h6 text-success">' + (problem.correct_attempts || 0) + '</span>';
+    html += '<small class="text-muted">Correct Solutions</small>';
+    html += '</div>';
+    html += '<div class="col-4">';
+    html += '<span class="d-block h6 text-warning">' + successRate + '%</span>';
+    html += '<small class="text-muted">Success Rate</small>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    
+    previewContent.innerHTML = html;
     
     // Update solve button
     solveProblemBtn.onclick = function() {
-        window.location.href = `/mathematics/problems/${problem.id}`;
+        window.location.href = '/mathematics/problems/' + problem.id;
     };
     
     // Show modal
@@ -315,5 +482,38 @@ function showProblemPreview(problem) {
     }
 }
 
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showNotification(message, type = 'info', duration = 3000) {
+    const notification = document.createElement('div');
+    notification.className = `alert alert-${type} alert-dismissible position-fixed`;
+    notification.style.cssText = `
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    `;
+    
+    notification.innerHTML = `
+        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+        }
+    }, duration);
+}
 </script>
 {% endblock %}

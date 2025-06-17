@@ -598,3 +598,289 @@ body {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* Add to static/css/style.css */
+
+/* Problem Card Delete Animation */
+.problem-card {
+    transition: all 0.3s ease;
+    transform-origin: center;
+}
+
+.problem-card.deleting {
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+}
+
+/* Delete Modal Enhancements */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 12px 12px 0 0;
+}
+
+.modal-footer {
+    border-top: 1px solid #dee2e6;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Enhanced Delete Button Styling */
+.delete-problem-btn {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.delete-problem-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.delete-problem-btn:active {
+    transform: translateY(0);
+}
+
+/* Loading State for Delete Button */
+.delete-problem-btn.loading {
+    pointer-events: none;
+}
+
+.delete-problem-btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Problem Stats Animation */
+.problem-stats .h6 {
+    transition: all 0.3s ease;
+}
+
+.problem-stats:hover .h6 {
+    transform: scale(1.1);
+}
+
+/* Success Rate Badge */
+.success-rate-badge {
+    position: relative;
+    overflow: hidden;
+}
+
+.success-rate-badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+}
+
+.success-rate-badge:hover::before {
+    left: 100%;
+}
+
+/* Mobile Responsiveness for Delete Modal */
+@media (max-width: 768px) {
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .modal-body ul {
+        padding-left: 1rem;
+    }
+    
+    .delete-problem-btn {
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+/* Blog Post Card Delete Animation */
+.blog-post-card {
+    transition: all 0.3s ease;
+    transform-origin: center;
+}
+
+.blog-post-card.deleting {
+    opacity: 0;
+    transform: scale(0.8) translateY(-20px);
+}
+
+/* Enhanced Delete Modal for Blog Posts */
+#deleteBlogPostModal .modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+#deleteBlogPostModal .modal-header {
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 12px 12px 0 0;
+}
+
+#deleteBlogPostModal .modal-footer {
+    border-top: 1px solid #dee2e6;
+    border-radius: 0 0 12px 12px;
+}
+
+/* Blog Stats in Delete Modal */
+.blog-stats .h6 {
+    transition: all 0.3s ease;
+    font-weight: 600;
+}
+
+.blog-stats:hover .h6 {
+    transform: scale(1.05);
+}
+
+/* Enhanced Delete Button Styling for Blog Posts */
+.delete-post-btn {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.delete-post-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.delete-post-btn:active {
+    transform: translateY(0);
+}
+
+/* Blog Post Tag Animation in Modal */
+.tag-preview {
+    display: inline-block;
+    transition: all 0.2s ease;
+}
+
+.tag-preview:hover {
+    transform: scale(1.1);
+}
+
+/* Notification Animation for Blog Posts */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Loading State for Delete Button */
+.delete-post-btn.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.delete-post-btn.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+/* Blog Post Card Hover Effects */
+.blog-post-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+/* Featured Image Overlay for Delete Preview */
+.featured-image-overlay {
+    position: relative;
+    overflow: hidden;
+}
+
+.featured-image-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+}
+
+.featured-image-overlay:hover::before {
+    left: 100%;
+}
+
+/* Mobile Responsiveness for Blog Delete Modal */
+@media (max-width: 768px) {
+    #deleteBlogPostModal .modal-dialog {
+        margin: 1rem;
+    }
+    
+    #deleteBlogPostModal .modal-body ul {
+        padding-left: 1rem;
+    }
+    
+    .delete-post-btn {
+        padding: 0.25rem 0.5rem;
+    }
+    
+    .blog-stats .row {
+        margin: 0;
+    }
+    
+    .blog-stats .col-4 {
+        padding: 0.25rem;
+    }
+}
+
+/* Success/Error Message Styling */
+.alert.position-fixed {
+    animation: slideInRight 0.3s ease-out;
+    border: none;
+    border-left: 4px solid;
+}
+
+.alert-success.position-fixed {
+    border-left-color: #28a745;
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.alert-error.position-fixed {
+    border-left-color: #dc3545;
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* Spin Animation */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
