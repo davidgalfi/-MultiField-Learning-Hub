@@ -884,3 +884,168 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+
+/* static/css/style.css - Add programming theme styles */
+
+/* Programming Theme Colors */
+:root {
+    --code-primary: #2196F3;
+    --code-secondary: #64B5F6;
+    --code-accent: #1976D2;
+    --code-bg: linear-gradient(135deg, #2196F3 0%, #64B5F6 100%);
+}
+
+/* Programming Theme Styles */
+.bg-gradient-code {
+    background: var(--code-bg) !important;
+}
+
+.code-example-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.code-example-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.code-preview {
+    position: relative;
+    overflow-x: auto;
+}
+
+.code-preview pre {
+    margin: 0;
+    border-radius: 6px;
+    font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+/* Language Badge Colors */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+}
+
+/* Like Button Animation */
+.like-btn {
+    transition: all 0.3s ease;
+}
+
+.like-btn.liked {
+    transform: scale(1.2);
+    color: #e74c3c;
+}
+
+.like-btn:hover {
+    transform: scale(1.1);
+}
+
+/* Programming Tip Styling */
+.programming-tip {
+    padding: 1rem;
+    border-left: 4px solid var(--code-primary);
+    background: rgba(33, 150, 243, 0.05);
+    border-radius: 0 8px 8px 0;
+}
+
+/* Code Playground Styles */
+.code-editor {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'Fira Code', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 1rem;
+    min-height: 300px;
+    resize: vertical;
+}
+
+.code-editor:focus {
+    border-color: var(--code-primary);
+    box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25);
+    outline: none;
+}
+
+/* Language Distribution Progress */
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.8s ease;
+}
+
+/* Stats Animation */
+.stat-item {
+    transition: all 0.3s ease;
+    padding: 0.5rem;
+    border-radius: 6px;
+}
+
+.stat-item:hover {
+    background: rgba(33, 150, 243, 0.1);
+    transform: translateX(5px);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .code-preview pre {
+        font-size: 11px;
+        padding: 0.75rem;
+    }
+    
+    .programming-tip {
+        padding: 0.75rem;
+    }
+    
+    .code-example-card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Syntax Highlighting Enhancements */
+.language-python { color: #3776ab; }
+.language-javascript { color: #f7df1e; }
+.language-java { color: #ed8b00; }
+.language-csharp { color: #239120; }
+.language-cpp { color: #00599c; }
+.language-go { color: #00add8; }
+.language-rust { color: #000000; }
+.language-php { color: #777bb4; }
+.language-ruby { color: #cc342d; }
+.language-typescript { color: #3178c6; }
+
+/* Code Block Copy Button */
+.code-block-container {
+    position: relative;
+}
+
+.copy-code-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.code-block-container:hover .copy-code-btn {
+    opacity: 1;
+}
+
+.copy-code-btn:hover {
+    background: rgba(0,0,0,0.9);
+}

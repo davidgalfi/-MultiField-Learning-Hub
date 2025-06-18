@@ -1,0 +1,236 @@
+<!-- templates/programming/index.html -->
+{% extends "field_base.html" %}
+
+{% block title %}Programming - Learning Hub{% endblock %}
+
+{% block field_content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-code me-2"></i>Programming Hub</h2>
+        <p class="text-muted">Master programming with examples, tutorials, and hands-on practice</p>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row g-4 mb-5">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header bg-gradient-code text-white">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-terminal me-2"></i>Developer Tools
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <a href="{{ url_for('programming.examples') }}" class="btn btn-outline-primary w-100 h-100 py-3 text-decoration-none">
+                            <i class="fas fa-code fa-2x mb-2 d-block"></i>
+                            <strong>Code Examples</strong>
+                            <small class="d-block text-muted">Browse code snippets</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('programming.tutorials') }}" class="btn btn-outline-success w-100 h-100 py-3 text-decoration-none">
+                            <i class="fas fa-book fa-2x mb-2 d-block"></i>
+                            <strong>Tutorials</strong>
+                            <small class="d-block text-muted">Learn step by step</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('programming.code_playground') }}" class="btn btn-outline-warning w-100 h-100 py-3 text-decoration-none">
+                            <i class="fas fa-play fa-2x mb-2 d-block"></i>
+                            <strong>Playground</strong>
+                            <small class="d-block text-muted">Test code online</small>
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{{ url_for('programming.create_example_form') }}" class="btn btn-outline-info w-100 h-100 py-3 text-decoration-none">
+                            <i class="fas fa-plus fa-2x mb-2 d-block"></i>
+                            <strong>Share Code</strong>
+                            <small class="d-block text-muted">Add your examples</small>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats and Overview -->
+<div class="row g-4 mb-5">
+    <div class="col-lg-8" data-aos="fade-right">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-star me-2"></i>Featured Code Examples
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if recent_examples %}
+                <div class="row g-3">
+                    {% for example in recent_examples %}
+                    <div class="col-md-6">
+                        <div class="code-example-card card h-100 border-0 bg-light">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-primary">
+                                        {{ example.language.title() }}
+                                    </span>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-heart text-danger me-1"></i>
+                                        <small>{{ example.likes or 0 }}</small>
+                                    </div>
+                                </div>
+                                <h6 class="card-title">{{ example.title }}</h6>
+                                <p class="card-text text-muted small">{{ (example.description or '')[:80] }}...</p>
+                                
+                                <!-- Code Preview -->
+                                <div class="code-preview mb-2">
+                                    <pre class="bg-dark text-light p-2 rounded small"><code>{{ (example.code or '')[:100] }}{% if (example.code or '')|length > 100 %}...{% endif %}</code></pre>
+                                </div>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ example.created_at.strftime('%b %d') if example.created_at else 'Recent' }}</small>
+                                    <a href="{{ url_for('programming.example_detail', example_id=example.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye me-1"></i>View Code
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-code fa-3x text-muted mb-3"></i>
+                    <h6>No code examples yet</h6>
+                    <p class="text-muted">Start by adding your first code example!</p>
+                    <a href="{{ url_for('programming.create_example_form') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add Code Example
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4" data-aos="fade-left">
+        <!-- Programming Stats -->
+        <div class="card border-0 shadow-lg mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>Programming Stats
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="stats-grid">
+                    <div class="stat-item mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Code Examples</span>
+                            <strong class="text-primary">{{ stats.total_examples }}</strong>
+                        </div>
+                    </div>
+                    <div class="stat-item mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Blog Posts</span>
+                            <strong class="text-success">{{ stats.total_posts }}</strong>
+                        </div>
+                    </div>
+                    <div class="stat-item mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Languages</span>
+                            <strong class="text-info">{{ stats.languages|length }}</strong>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Language Distribution -->
+                <h6 class="mt-4 mb-3">Popular Languages</h6>
+                {% for language, count in stats.language_distribution[:5] %}
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="small">{{ language.title() }}</span>
+                        <div class="d-flex align-items-center">
+                            <div class="progress" style="width: 60px; height: 8px;">
+                                <div class="progress-bar bg-primary" style="width: {{ (count / (stats.total_examples or 1) * 100)|round|int }}%"></div>
+                            </div>
+                            <span class="small text-muted ms-2">{{ count }}</span>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="small text-muted">No language data available yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Programming Tip -->
+        <div class="card border-0 shadow-lg">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-lightbulb me-2"></i>Pro Tip
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="programming-tip">
+                    <p class="mb-3">
+                        <i class="fas fa-quote-left text-muted me-2"></i>
+                        Write code for humans, not just computers. Clear, readable code is maintainable code!
+                    </p>
+                    <small class="text-muted">Best Practice for Clean Code</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Blog Posts -->
+<div class="row g-4">
+    <div class="col-12" data-aos="fade-up">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">
+                    <i class="fas fa-newspaper me-2"></i>Latest Programming Posts
+                </h5>
+                <a href="{{ url_for('programming.blog_posts') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-arrow-right me-1"></i>All Posts
+                </a>
+            </div>
+            <div class="card-body">
+                {% if recent_posts %}
+                <div class="row g-3">
+                    {% for post in recent_posts %}
+                    <div class="col-md-4">
+                        <div class="card h-100 border-0 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <a href="{{ url_for('programming.blog_post_detail', post_id=post.id) }}" class="text-decoration-none">
+                                        {{ post.title }}
+                                    </a>
+                                </h6>
+                                {% if post.excerpt %}
+                                <p class="card-text small text-muted">{{ post.excerpt[:100] }}...</p>
+                                {% endif %}
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">{{ post.author or 'Admin' }}</small>
+                                    <small class="text-muted">{{ post.created_at.strftime('%b %d') if post.created_at else 'Recent' }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-newspaper fa-3x text-muted mb-3"></i>
+                    <h6>No blog posts yet</h6>
+                    <p class="text-muted">Start sharing your programming knowledge!</p>
+                    <a href="{{ url_for('programming.create_blog_post_form') }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Write First Post
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
