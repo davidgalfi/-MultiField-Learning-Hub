@@ -1,0 +1,108 @@
+{% extends "field_base.html" %}
+
+{% block title %}Write a Programming Post - Learning Hub{% endblock %}
+
+{% block field_content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header bg-gradient-code text-white">
+                <h4 class="card-title mb-0"><i class="fas fa-keyboard me-2"></i>Write a Programming Blog Post</h4>
+            </div>
+            <div class="card-body p-4">
+                <form id="blog-post-form">
+                    <!-- Title -->
+                    <div class="mb-4">
+                        <label for="post-title" class="form-label fw-bold">Title *</label>
+                        <input type="text" class="form-control form-control-lg" id="post-title" placeholder="e.g., Demystifying Asynchronous JavaScript" required>
+                    </div>
+                    
+                    <!-- Content -->
+                    <div class="mb-4">
+                        <label for="post-content" class="form-label fw-bold">Content *</label>
+                        <textarea class="form-control content-editor" id="post-content" rows="20" placeholder="Write your programming article here..."></textarea>
+                        <div class="form-text">
+                            Use Markdown for formatting. For code blocks, use triple backticks, e.g., ``````
+                        </div>
+                    </div>
+                    
+                    <!-- Excerpt, Author, Tags -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="post-excerpt" class="form-label fw-bold">Excerpt</label>
+                            <textarea class="form-control" id="post-excerpt" rows="3" placeholder="A short summary of your post..."></textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="post-tags" class="form-label fw-bold">Tags</label>
+                            <input type="text" class="form-control" id="post-tags" placeholder="javascript, async, promises">
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-success btn-lg"><i class="fas fa-paper-plane me-2"></i>Publish Post</button>
+                        <a href="{{ url_for('programming.blog_posts') }}" class="btn btn-outline-secondary btn-lg">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('blog-post-form');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitBlogPost();
+    });
+});
+
+function submitBlogPost() {
+    const formData = {
+        title: document.getElementById('post-title').value,
+        content: document.getElementById('post-content').value,
+        excerpt: document.getElementById('post-excerpt').value,
+        tags: document.getElementById('post-tags').value,
+        author: 'Admin' // Or get from a user session
+    };
+
+    if (!formData.title || !formData.content) {
+        showNotification('Title and Content are required.', 'error');
+        return;
+    }
+    
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Publishing...';
+    submitBtn.disabled = true;
+
+    fetch('/programming/api/blog/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Blog post published successfully!', 'success');
+            setTimeout(() => {
+                window.location.href = '/programming/blog/' + data.id;
+            }, 1500);
+        } else {
+            showNotification('Error: ' + (data.error || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('An unexpected error occurred.', 'error');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+</script>
+{% endblock %}

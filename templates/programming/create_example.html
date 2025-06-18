@@ -1,0 +1,147 @@
+{% extends "field_base.html" %}
+
+{% block title %}Create Code Example - Programming Hub{% endblock %}
+
+{% block field_content %}
+<div class="row">
+    <div class="col-lg-10 mx-auto">
+        <div class="card border-0 shadow-lg">
+            <div class="card-header bg-gradient-code text-white">
+                <h4 class="card-title mb-0"><i class="fas fa-plus-circle me-2"></i>Add a New Code Example</h4>
+            </div>
+            <div class="card-body p-4">
+                <form id="code-example-form">
+                    <!-- Title -->
+                    <div class="mb-4">
+                        <label for="example-title" class="form-label fw-bold">Title *</label>
+                        <input type="text" class="form-control form-control-lg" id="example-title" placeholder="e.g., Python Singleton Pattern" required>
+                    </div>
+
+                    <!-- Language, Category, Difficulty -->
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label for="example-language" class="form-label fw-bold">Language *</label>
+                            <select class="form-select" id="example-language" required>
+                                {% for lang in languages %}
+                                <option value="{{ lang }}">{{ lang.title() }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="example-category" class="form-label fw-bold">Category</label>
+                            <select class="form-select" id="example-category">
+                                {% for cat in categories %}
+                                <option value="{{ cat }}">{{ cat.replace('-', ' ').title() }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="example-difficulty" class="form-label fw-bold">Difficulty</label>
+                            <select class="form-select" id="example-difficulty">
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label for="example-description" class="form-label fw-bold">Description</label>
+                        <textarea class="form-control" id="example-description" rows="3" placeholder="A brief summary of what this code does..."></textarea>
+                    </div>
+
+                    <!-- Code Editor -->
+                    <div class="mb-4">
+                        <label for="example-code" class="form-label fw-bold">Code *</label>
+                        <textarea class="form-control code-editor" id="example-code" rows="15" placeholder="Paste your code here..."></textarea>
+                    </div>
+
+                    <!-- Explanation -->
+                    <div class="mb-4">
+                        <label for="example-explanation" class="form-label fw-bold">Explanation</label>
+                        <textarea class="form-control" id="example-explanation" rows="8" placeholder="Explain how the code works, step by step..."></textarea>
+                        <div class="form-text">You can use Markdown for formatting.</div>
+                    </div>
+                    
+                    <!-- Tags -->
+                    <div class="mb-4">
+                        <label for="example-tags" class="form-label fw-bold">Tags</label>
+                        <input type="text" class="form-control" id="example-tags" placeholder="python, design-patterns, oop (comma separated)">
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-success btn-lg"><i class="fas fa-save me-2"></i>Publish Example</button>
+                        <a href="{{ url_for('programming.examples') }}" class="btn btn-outline-danger btn-lg"><i class="fas fa-times me-2"></i>Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet"/>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('code-example-form');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        submitCodeExample();
+    });
+});
+
+function submitCodeExample() {
+    const formData = {
+        title: document.getElementById('example-title').value,
+        language: document.getElementById('example-language').value,
+        category: document.getElementById('example-category').value,
+        difficulty: document.getElementById('example-difficulty').value,
+        description: document.getElementById('example-description').value,
+        code: document.getElementById('example-code').value,
+        explanation: document.getElementById('example-explanation').value,
+        tags: document.getElementById('example-tags').value,
+    };
+
+    if (!formData.title || !formData.code || !formData.language) {
+        showNotification('Title, Language, and Code are required.', 'error');
+        return;
+    }
+    
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Publishing...';
+    submitBtn.disabled = true;
+
+    fetch('/programming/api/examples', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('Code example published successfully!', 'success');
+            setTimeout(() => {
+                window.location.href = '/programming/examples/' + data.id;
+            }, 1500);
+        } else {
+            showNotification('Error: ' + (data.error || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        showNotification('An unexpected error occurred.', 'error');
+        console.error('Error:', error);
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+</script>
+{% endblock %}
