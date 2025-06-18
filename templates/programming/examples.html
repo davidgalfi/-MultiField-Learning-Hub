@@ -1,0 +1,101 @@
+{% extends "field_base.html" %}
+
+{% block title %}Code Examples - Programming Hub{% endblock %}
+
+{% block field_content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-code-branch me-2"></i>Code Examples</h2>
+        <p class="text-muted">A comprehensive collection of code snippets for various languages and categories.</p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('programming.create_example_form') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Add New Example
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filter Bar -->
+<div class="card mb-4 shadow-sm">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="search" class="form-label">Search</label>
+                <input type="text" class="form-control" id="search" name="search" value="{{ search_term or '' }}" placeholder="Search by title, tags...">
+            </div>
+            <div class="col-md-2">
+                <label for="language" class="form-label">Language</label>
+                <select class="form-select" id="language" name="language">
+                    <option value="all" {% if current_language == 'all' %}selected{% endif %}>All Languages</option>
+                    {% for lang in languages %}
+                    <option value="{{ lang }}" {% if current_language == lang %}selected{% endif %}>{{ lang.title() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="category" class="form-label">Category</label>
+                <select class="form-select" id="category" name="category">
+                    <option value="all" {% if current_category == 'all' %}selected{% endif %}>All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if current_category == cat %}selected{% endif %}>{{ cat.replace('-', ' ').title() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="difficulty" class="form-label">Difficulty</label>
+                <select class="form-select" id="difficulty" name="difficulty">
+                    <option value="all" {% if current_difficulty == 'all' %}selected{% endif %}>All</option>
+                    <option value="beginner" {% if current_difficulty == 'beginner' %}selected{% endif %}>Beginner</option>
+                    <option value="intermediate" {% if current_difficulty == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                    <option value="advanced" {% if current_difficulty == 'advanced' %}selected{% endif %}>Advanced</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100"><i class="fas fa-filter"></i></button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Code Examples Grid -->
+<div class="row g-4">
+    {% if examples %}
+        {% for example in examples %}
+        <div class="col-lg-6">
+            <div class="card code-example-card h-100 shadow-sm border-0">
+                <div class="card-header d-flex justify-content-between align-items-center bg-light">
+                    <h5 class="card-title mb-0 fs-6">{{ example.title }}</h5>
+                    <span class="badge rounded-pill bg-primary">{{ example.language.title() }}</span>
+                </div>
+                <div class="card-body">
+                    <p class="card-text small text-muted">{{ (example.description or '')[:120] }}...</p>
+                    <div class="d-flex justify-content-between small text-muted">
+                        <span><i class="fas fa-tags me-1"></i> {{ example.category.replace('-', ' ').title() }}</span>
+                        <span class="badge bg-{{ 'success' if example.difficulty == 'beginner' else 'warning' if example.difficulty == 'intermediate' else 'danger' }}">{{ example.difficulty.title() }}</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center text-danger like-btn-container" data-example-id="{{ example.id }}">
+                        <i class="fas fa-heart me-1"></i>
+                        <small class="like-count">{{ example.likes or 0 }}</small>
+                    </div>
+                    <a href="{{ url_for('programming.example_detail', example_id=example.id) }}" class="btn btn-outline-primary btn-sm">
+                        View Details <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <i class="fas fa-search-minus fa-4x text-muted mb-3"></i>
+            <h4>No Code Examples Found</h4>
+            <p class="text-muted">Try adjusting your filters or be the first to add an example!</p>
+            <a href="{{ url_for('programming.examples') }}" class="btn btn-outline-secondary me-2">Clear Filters</a>
+            <a href="{{ url_for('programming.create_example_form') }}" class="btn btn-primary">Add Example</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

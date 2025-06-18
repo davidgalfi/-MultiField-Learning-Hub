@@ -58,6 +58,9 @@ def examples():
         )
     
     examples = query.order_by(CodeExample.created_at.desc()).all()
+
+    from app import FIELDS_CONFIG
+    field_info = FIELDS_CONFIG.get('programming', {})
     
     return render_template('programming/examples.html',
                          examples=examples,
@@ -68,7 +71,7 @@ def examples():
                          current_difficulty=difficulty,
                          search_term=search,
                          field_key='programming',
-                         field_info=FIELDS_CONFIG.get('programming', {}))
+                         field_info=field_info)
 
 @programming_bp.route('/examples/<int:example_id>')
 def example_detail(example_id):
