@@ -1,0 +1,367 @@
+
+{% extends "field_base.html" %}
+
+{% block title %}Programming Blog - Learning Hub{% endblock %}
+
+{% block field_content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-newspaper me-2"></i>Programming Blog</h2>
+        <p class="text-muted">In-depth articles, insights, and latest trends in programming and software development.</p>
+    </div>
+    <div class="col-auto">
+        <a href="{{ url_for('programming.create_blog_post_form') }}" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Write New Post
+        </a>
+    </div>
+</div>
+
+<!-- Search and Filter (can be implemented later if needed) -->
+<div class="card mb-4 d-none"> {# Hidden for now, can uncomment and add JS later #}
+    <div class="card-body">
+        <form method="GET" class="row g-3">
+            <div class="col-md-6">
+                <label for="search" class="form-label">Search Posts</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ request.args.get('search', '') }}" 
+                       placeholder="Search by title, content, or tags...">
+            </div>
+            <div class="col-md-3">
+                <label for="tag" class="form-label">Filter by Tag</label>
+                <select class="form-select" id="tag" name="tag">
+                    <option value="">All Tags</option>
+                    {# Add dynamic tags here later #}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-outline-primary w-100">
+                    <i class="fas fa-search me-2"></i>Search
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Blog Posts Grid -->
+{% if posts.items %}
+<div class="row g-4 mb-4">
+    {% for post in posts.items %}
+    <div class="col-lg-6">
+        <div class="card blog-post-card h-100 shadow-sm border-0" data-post-id="{{ post.id }}">
+            {% if post.featured_image %}
+            <img src="{{ post.featured_image }}" class="card-img-top" alt="{{ post.title }}" style="height: 200px; object-fit: cover;">
+            {% endif %}
+            
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <small class="text-muted">
+                        <i class="fas fa-calendar me-1"></i>
+                        {{ post.created_at.strftime('%B %d, %Y') if post.created_at else 'Recent' }}
+                    </small>
+                    {% if post.reading_time %}
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        {{ post.reading_time }} min read
+                    </small>
+                    {% endif %}
+                </div>
+                
+                <h5 class="card-title">
+                    <a href="{{ url_for('programming.blog_post_detail', post_id=post.id) }}" class="text-decoration-none">
+                        {{ post.title }}
+                    </a>
+                </h5>
+                
+                {% if post.excerpt %}
+                <p class="card-text text-muted">{{ post.excerpt }}</p>
+                {% else %}
+                <p class="card-text text-muted">
+                    {{ post.content[:150] }}{% if post.content|length > 150 %}...{% endif %}
+                </p>
+                {% endif %}
+                
+                {% if post.tags %}
+                <div class="mb-3">
+                    {% for tag in post.tags.split(',') %}
+                    {% if tag.strip() %}
+                    <span class="badge bg-secondary me-1">{{ tag.strip() }}</span>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        <i class="fas fa-user me-1"></i>{{ post.author or 'Admin' }}
+                    </small>
+                    <small class="text-muted">
+                        <i class="fas fa-eye me-1"></i>{{ post.views or 0 }} views
+                    </small>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-transparent border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('programming.blog_post_detail', post_id=post.id) }}" 
+                       class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-arrow-right me-1"></i>Read More
+                    </a>
+                    
+                    <div class="btn-group btn-group-sm">
+                        <a href="{{ url_for('programming.blog_post_detail', post_id=post.id) }}" 
+                           class="btn btn-outline-info" title="View">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="#" class="btn btn-outline-primary" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <button type="button" class="btn btn-outline-danger delete-post-btn" 
+                                title="Delete Post"
+                                data-post-id="{{ post.id }}"
+                                data-post-title="{{ post.title }}"
+                                data-post-author="{{ post.author or 'Admin' }}"
+                                data-post-views="{{ post.views or 0 }}"
+                                data-post-reading-time="{{ post.reading_time or 0 }}"
+                                data-post-tags="{{ post.tags or '' }}"
+                                data-post-created="{{ post.created_at.strftime('%B %d, %Y') if post.created_at else 'Recent' }}">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if posts.pages > 1 %}
+<div class="d-flex justify-content-center">
+    <nav aria-label="Blog posts pagination">
+        <ul class="pagination">
+            {% if posts.has_prev %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('programming.blog_posts', page=posts.prev_num, **request.args) }}">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for page_num in posts.iter_pages() %}
+                {% if page_num %}
+                    {% if page_num != posts.page %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('programming.blog_posts', page=page_num, **request.args) }}">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ page_num }}</span>
+                    </li>
+                    {% endif %}
+                {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if posts.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="{{ url_for('programming.blog_posts', page=posts.next_num, **request.args) }}">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-newspaper fa-4x text-muted mb-3"></i>
+    <h4>No Programming Blog Posts Yet</h4>
+    <p class="text-muted">Be the first to share your programming insights!</p>
+    <a href="{{ url_for('programming.create_blog_post_form') }}" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Write First Post
+    </a>
+</div>
+{% endif %}
+
+<!-- Delete Blog Post Modal (reused from math blog) -->
+<div class="modal fade" id="deleteBlogPostModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    Confirm Delete Blog Post
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> This action cannot be undone.
+                </div>
+                
+                <p>Are you sure you want to delete this blog post?</p>
+                <div class="p-3 bg-light rounded mb-3">
+                    <h6 class="mb-2"><strong id="deletePostTitle"></strong></h6>
+                    <div class="row text-muted small">
+                        <div class="col-6">
+                            <span>Author: <span id="deletePostAuthor"></span></span>
+                        </div>
+                        <div class="col-6">
+                            <span>Created: <span id="deletePostCreated"></span></span>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <span class="text-muted small">Tags: <span id="deletePostTags">None</span></span>
+                    </div>
+                </div>
+                
+                <div class="row text-center mb-3">
+                    <div class="col-4">
+                        <span class="d-block h6 text-primary" id="deletePostViews">0</span>
+                        <small class="text-muted">Total Views</small>
+                    </div>
+                    <div class="col-4">
+                        <span class="d-block h6 text-info" id="deletePostReadingTime">0</span>
+                        <small class="text-muted">Reading Time (min)</small>
+                    </div>
+                    <div class="col-4">
+                        <span class="d-block h6 text-success" id="deletePostWordCount">0</span>
+                        <small class="text-muted">Est. Words</small>
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <small class="text-muted">
+                        <strong>This will permanently remove:</strong>
+                    </small>
+                    <ul class="small text-muted mt-2">
+                        <li>The complete blog post content and formatting</li>
+                        <li>All view statistics and engagement data</li>
+                        <li>Associated tags and metadata</li>
+                        <li>Any LaTeX equations and mathematical content</li>
+                        <li>Featured image references and links</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-2"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmDeletePost">
+                    <i class="fas fa-trash me-2"></i>Delete Blog Post
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let deletePostId = null;
+let deletePostData = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize delete functionality for posts
+    document.querySelectorAll('.delete-post-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const postId = this.dataset.postId;
+            const postTitle = this.dataset.postTitle;
+            const postAuthor = this.dataset.postAuthor;
+            const postViews = parseInt(this.dataset.postViews) || 0;
+            const postReadingTime = parseInt(this.dataset.postReadingTime) || 0;
+            const postTags = this.dataset.postTags;
+            const postCreated = this.dataset.postCreated;
+            
+            showDeletePostModal(postId, {
+                title: postTitle,
+                author: postAuthor,
+                views: postViews,
+                readingTime: postReadingTime,
+                tags: postTags,
+                created: postCreated
+            });
+        });
+    });
+});
+
+function showDeletePostModal(postId, postData) {
+    deletePostId = postId;
+    deletePostData = postData;
+    
+    document.getElementById('deletePostTitle').textContent = postData.title;
+    document.getElementById('deletePostAuthor').textContent = postData.author;
+    document.getElementById('deletePostCreated').textContent = postData.created;
+    document.getElementById('deletePostViews').textContent = postData.views;
+    document.getElementById('deletePostReadingTime').textContent = postData.readingTime;
+    
+    const tagsElement = document.getElementById('deletePostTags');
+    if (postData.tags && postData.tags.trim()) {
+        tagsElement.textContent = postData.tags;
+    } else {
+        tagsElement.textContent = 'None';
+    }
+    
+    const estimatedWords = postData.readingTime * 200;
+    document.getElementById('deletePostWordCount').textContent = estimatedWords || 'N/A';
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteBlogPostModal'));
+    modal.show();
+}
+
+document.getElementById('confirmDeletePost').addEventListener('click', function() {
+    if (!deletePostId) return;
+    
+    const btn = this;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+    btn.disabled = true;
+    
+    fetch(`/programming/api/blog/${deletePostId}/delete`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteBlogPostModal'));
+            modal.hide();
+            
+            const postCard = document.querySelector(`[data-post-id="${deletePostId}"]`);
+            if (postCard) {
+                postCard.style.transition = 'all 0.3s ease';
+                postCard.style.opacity = '0';
+                postCard.style.transform = 'scale(0.8)';
+                setTimeout(() => {
+                    postCard.remove();
+                    const remainingPosts = document.querySelectorAll('.blog-post-card').length;
+                    if (remainingPosts === 0) {
+                        window.location.reload();
+                    }
+                }, 300);
+            }
+            showNotification(`Blog post "${deletePostData.title}" deleted successfully!`, 'success', 4000);
+        } else {
+            showNotification('Error: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to delete blog post', 'error');
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+});
+
+</script>
+{% endblock %}

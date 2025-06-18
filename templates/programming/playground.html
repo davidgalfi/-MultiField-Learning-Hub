@@ -1,0 +1,87 @@
+{% extends "field_base.html" %}
+
+{% block title %}Code Playground - Programming Hub{% endblock %}
+
+{% block field_content %}
+<div class="row mb-4">
+    <div class="col">
+        <h2><i class="fas fa-play-circle me-2"></i>Code Playground</h2>
+        <p class="text-muted">Experiment with code, test snippets, and explore different programming languages.</p>
+    </div>
+</div>
+
+<div class="card shadow-lg mb-4">
+    <div class="card-header bg-gradient-code text-white">
+        <h5 class="card-title mb-0"><i class="fas fa-terminal me-2"></i>Your Code Here</h5>
+    </div>
+    <div class="card-body p-4">
+        <div class="row g-3 mb-3">
+            <div class="col-md-6">
+                <label for="playground-language" class="form-label fw-bold">Language</label>
+                <select class="form-select" id="playground-language">
+                    {% for lang in languages %}
+                    <option value="{{ lang }}">{{ lang.title() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <button class="btn btn-success flex-grow-1" id="run-code-btn">
+                    <i class="fas fa-play me-2"></i>Run Code
+                </button>
+            </div>
+        </div>
+        
+        <label for="code-input" class="form-label fw-bold">Code</label>
+        <textarea class="form-control code-editor mb-3" id="code-input" rows="15" placeholder="Write your code here..."></textarea>
+        
+        <label for="output-console" class="form-label fw-bold">Output</label>
+        <textarea class="form-control" id="output-console" rows="8" readonly placeholder="Your code output will appear here..." style="background-color: #f0f0f0; color: #333;"></textarea>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const runButton = document.getElementById('run-code-btn');
+    const codeInput = document.getElementById('code-input');
+    const outputConsole = document.getElementById('output-console');
+    const languageSelect = document.getElementById('playground-language');
+
+    runButton.addEventListener('click', function() {
+        const code = codeInput.value;
+        const language = languageSelect.value;
+        
+        if (!code.trim()) {
+            outputConsole.value = "Please enter some code to run.";
+            return;
+        }
+        
+        outputConsole.value = "Running code...\n";
+        
+        // Simulate code execution (replace with actual backend execution later)
+        setTimeout(() => {
+            let simulatedOutput = "";
+            switch (language) {
+                case 'python':
+                    simulatedOutput = `Executing Python code:\n${code}\n\n(Simulated Output) Hello from Python!`;
+                    break;
+                case 'javascript':
+                    simulatedOutput = `Executing JavaScript code:\n${code}\n\n(Simulated Output) Console log from JS!`;
+                    break;
+                case 'java':
+                    simulatedOutput = `Executing Java code:\n${code}\n\n(Simulated Output) Java Virtual Machine running!`;
+                    break;
+                case 'csharp':
+                    simulatedOutput = `Executing C# code:\n${code}\n\n(Simulated Output) .NET rocks!`;
+                    break;
+                default:
+                    simulatedOutput = `Executing ${language.title()} code:\n${code}\n\n(Simulated Output) Generic output.`;
+            }
+            outputConsole.value = simulatedOutput;
+            showNotification('Code execution simulated!', 'info');
+        }, 1500);
+    });
+});
+</script>
+{% endblock %}

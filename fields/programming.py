@@ -61,7 +61,7 @@ def examples():
 
     from app import FIELDS_CONFIG
     field_info = FIELDS_CONFIG.get('programming', {})
-    
+
     return render_template('programming/examples.html',
                          examples=examples,
                          languages=get_programming_languages(),
@@ -267,6 +267,100 @@ def api_create_blog_post():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 400
+    
+
+@programming_bp.route('/examples/<int:example_id>/delete', methods=['POST'])
+def delete_code_example_form(example_id):
+    """Form-based code example deletion"""
+    try:
+        example = CodeExample.query.get_or_404(example_id)
+        example_title = example.title
+        
+        db.session.delete(example)
+        db.session.commit()
+        
+        flash(f'Code example "{example_title}" has been deleted successfully.', 'success')
+        return redirect(url_for('programming.examples'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting code example: {str(e)}', 'error')
+        return redirect(url_for('programming.examples'))
+
+@programming_bp.route('/api/examples/<int:example_id>/delete', methods=['DELETE'])
+def api_delete_code_example(example_id):
+    """API endpoint for safe code example deletion"""
+    try:
+        example = CodeExample.query.get_or_404(example_id)
+        example_data = {
+            'title': example.title,
+            'language': example.language,
+            'likes': example.likes or 0,
+            'category': example.category
+        }
+        
+        db.session.delete(example)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Code example "{example_data["title"]}" deleted successfully',
+            'deleted_example': example_data
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@programming_bp.route('/blog/<int:post_id>/delete', methods=['POST'])
+def delete_programming_blog_post_form(post_id):
+    """Form-based programming blog post deletion"""
+    try:
+        post = BlogPost.query.get_or_404(post_id)
+        post_title = post.title
+        
+        db.session.delete(post)
+        db.session.commit()
+        
+        flash(f'Programming blog post "{post_title}" has been deleted successfully.', 'success')
+        return redirect(url_for('programming.blog_posts'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting blog post: {str(e)}', 'error')
+        return redirect(url_for('programming.blog_posts'))
+
+@programming_bp.route('/api/blog/<int:post_id>/delete', methods=['DELETE'])
+def api_delete_programming_blog_post(post_id):
+    """API endpoint for safe programming blog post deletion"""
+    try:
+        post = BlogPost.query.get_or_404(post_id)
+        post_data = {
+            'title': post.title,
+            'author': post.author,
+            'views': post.views or 0,
+            'reading_time': post.reading_time or 0
+        }
+        
+        db.session.delete(post)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Programming blog post "{post_data["title"]}" deleted successfully',
+            'deleted_post': post_data
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 
 # Utility Functions
 def get_programming_languages():

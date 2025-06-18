@@ -720,3 +720,100 @@ function createMathPost() {
 function addProblem() {
     window.location.href = '/mathematics/problems/create';
 }
+
+// Add/update in static/js/app.js (or a new programming-delete.js file if preferred)
+let deleteExampleId = null;
+let deleteExampleData = null;
+
+// For examples.html
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize delete functionality for code examples
+    document.querySelectorAll('.delete-example-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const exampleId = this.dataset.exampleId;
+            const exampleTitle = this.dataset.exampleTitle;
+            const exampleLanguage = this.dataset.exampleLanguage;
+            const exampleLikes = parseInt(this.dataset.exampleLikes) || 0;
+            const exampleCategory = this.dataset.exampleCategory;
+            // Assuming views/rating are fetched or passed from Python if available
+            
+            showDeleteCodeExampleModal(exampleId, {
+                title: exampleTitle,
+                language: exampleLanguage,
+                likes: exampleLikes,
+                category: exampleCategory,
+                views: 0, // Placeholder, fetch if needed
+                rating: 'N/A' // Placeholder, fetch if needed
+            });
+        });
+    });
+});
+
+function showDeleteCodeExampleModal(exampleId, exampleData) {
+    deleteExampleId = exampleId;
+    deleteExampleData = exampleData;
+    
+    document.getElementById('deleteExampleTitle').textContent = exampleData.title;
+    document.getElementById('deleteExampleLanguage').textContent = exampleData.language;
+    document.getElementById('deleteExampleCategory').textContent = exampleData.category;
+    document.getElementById('deleteExampleLikes').textContent = exampleData.likes;
+    document.getElementById('deleteExampleViews').textContent = exampleData.views;
+    document.getElementById('deleteExampleRating').textContent = exampleData.rating;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteCodeExampleModal'));
+    modal.show();
+}
+
+document.getElementById('confirmDeleteExample').addEventListener('click', function() {
+    if (!deleteExampleId) return;
+    
+    const btn = this;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Deleting...';
+    btn.disabled = true;
+    
+    fetch(`/programming/api/examples/${deleteExampleId}/delete`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteCodeExampleModal'));
+            modal.hide();
+            
+            const exampleCard = document.querySelector(`[data-example-id="${deleteExampleId}"]`);
+            if (exampleCard) {
+                exampleCard.style.transition = 'all 0.3s ease';
+                exampleCard.style.opacity = '0';
+                exampleCard.style.transform = 'scale(0.8)';
+                
+                setTimeout(() => {
+                    exampleCard.remove();
+                    const remainingExamples = document.querySelectorAll('.code-example-card').length;
+                    if (remainingExamples === 0) {
+                        window.location.reload();
+                    }
+                }, 300);
+            }
+            showNotification(`Code example "${deleteExampleData.title}" deleted successfully!`, 'success', 4000);
+        } else {
+            showNotification('Error: ' + data.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Failed to delete code example', 'error');
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+});
+
+// For example_detail.html
+function showDeleteExampleDetailModal() {
+    const modal = new bootstrap.Modal(document.getElementById('deleteExampleDetailModal'));
+    modal.show();
+}
+
